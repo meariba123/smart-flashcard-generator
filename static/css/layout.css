@@ -1,0 +1,240 @@
+/* Base Theme */
+.flashmind-theme {
+  background: linear-gradient(135deg, #fde68a 0%, #673ab7 100%);
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+  padding: 0.75rem 2rem;
+  margin: 1rem auto;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 800px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #6b21a8;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+}
+
+.navbar a:hover {
+  background-color: #fef3c7;
+  color: #4c1d95;
+}
+
+/* Flash messages */
+.flashes {
+  list-style: none;
+  padding: 1rem;
+  max-width: 600px;
+  margin: 1rem auto;
+}
+
+.flashes li {
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Main content styling */
+main {
+  max-width: 1000px;
+  margin: auto;
+  padding: 1rem;
+}
+
+/* Animation for page load */
+body.flashmind-theme {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* Dashboard Buttons */
+.set-actions a {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* View & Review - secondary style */
+.set-actions a.btn-secondary {
+  background-color: #fef3c7; /* same pale yellow from welcome */
+  color: #6b21a8; /* same purple as welcome text */
+}
+
+.set-actions a.btn-secondary:hover {
+  background-color: #fde68a; /* slightly deeper yellow */
+  transform: translateY(-2px);
+}
+
+/* Upload Notes - primary style */
+.set-actions a.btn-primary {
+  background-color: #6b21a8; /* same purple as Get Started */
+  color: #fff;
+}
+
+.set-actions a.btn-primary:hover {
+  background-color: #581c87; /* slightly darker purple */
+  transform: translateY(-2px);
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Titles */
+.dashboard-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #6b21a8; /* Theme purple */
+    margin-bottom: 0.3rem;
+}
+
+.dashboard-subtitle {
+    font-size: 1rem;
+    color: #040000;
+    margin-bottom: 2rem;
+}
+
+/* Upload Box */
+.upload-box {
+    background: #fff;
+    border: 2px dashed #6b21a8; /* Purple border */
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+    margin-bottom: 2.5rem;
+    transition: border-color 0.3s ease;
+}
+
+.upload-box:hover {
+    border-color: #581c87; /* Darker purple on hover */
+}
+
+.upload-icon {
+    font-size: 2.5rem;
+    color: #6b21a8;
+    margin-bottom: 0.5rem;
+}
+
+.upload-text {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.upload-subtext {
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: 0.8rem;
+}
+
+/* Sets Heading */
+.sets-heading {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #6b21a8;
+    margin-bottom: 1rem;
+}
+
+/* Sets Grid */
+.sets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Set Card */
+.set-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.set-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.set-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #6b21a8;
+    margin-bottom: 1rem;
+}
+
+/* Actions */
+.set-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* Primary Button (Upload Notes) */
+.btn-primary {
+    background-color: #6b21a8;
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-primary:hover {
+    background-color: #581c87;
+    transform: translateY(-2px);
+}
+
+/* Secondary Button (View / Review) */
+.btn-secondary {
+    background-color: #fef3c7; /* Light yellow from theme */
+    color: #6b21a8;
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-secondary:hover {
+    background-color: #fde68a;
+    transform: translateY(-2px);
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

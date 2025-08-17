@@ -1,0 +1,25 @@
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            margin: 40px;
+            background: #f9f9f9;
+        }
+        .set-list {
+            display: inline-block;
+            text-align: left;
+            margin-top: 20px;
+        }
+        .set-item {
+            margin-bottom: 15px;
+        }
+        .set-link {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #311b92;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+        .set-link:hover {
+            background-color: #0056b3;
+        }

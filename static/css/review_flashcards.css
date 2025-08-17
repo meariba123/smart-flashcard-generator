@@ -1,0 +1,456 @@
+/* review_flashcards.css
+   Senior-level polished styling for FlashMind review page
+   Keeps purple + yellow palette, bubbly aesthetic, and original JS logic.
+*/
+
+/* -------- Color palette & tokens -------- */
+:root{
+  --purple-600: #512da8;
+  --purple-500: #6a4df4;
+  --purple-400: #8a6af7;
+  --yellow-300: #fff1b8;
+  --cream: #fdf6e3;
+  --soft-blue: #1273de;
+  --glass-bg: rgba(255,255,255,0.55);
+  --glass-border: rgba(255,255,255,0.6);
+  --card-radius: 18px;
+  --shadow-1: 0 6px 18px rgba(81,45,168,0.12);
+  --shadow-2: 0 18px 40px rgba(18,115,222,0.14);
+  --focus-ring: 3px;
+  --max-width: 920px;
+  --accent-gradient: linear-gradient(90deg, var(--yellow-300), #ffd86b 30%, var(--purple-400) 100%);
+  --glass-blur: blur(8px);
+  --transition: 280ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* -------- Base layout -------- */
+* { box-sizing: border-box; }
+html,body { height:100%; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #222;
+  background:
+    radial-gradient(1000px 400px at 10% 10%, rgba(138,106,247,0.06), transparent),
+    radial-gradient(800px 350px at 95% 90%, rgba(255,216,107,0.04), transparent),
+    #fbf7ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 20px 48px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Header / navbar */
+header.navbar {
+  width: min(100%, var(--max-width));
+  display:flex;
+  align-items:center;
+  gap: 16px;
+  padding: 12px 18px;
+  margin-bottom: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.45));
+  border-radius: 14px;
+  box-shadow: var(--shadow-1);
+  border: 1px solid rgba(81,45,168,0.06);
+}
+header.navbar nav { display:flex; gap: 14px; align-items:center; }
+header.navbar a {
+  color: var(--purple-600);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+}
+header.navbar a:hover,
+header.navbar a:focus {
+  transform: translateY(-3px);
+  background: linear-gradient(90deg, rgba(255,250,230,0.9), rgba(246,240,255,0.6));
+  box-shadow: 0 8px 18px rgba(105,72,180,0.12);
+  outline: none;
+}
+
+/* Dark-mode toggle in header (keeps original icon) */
+.dark-toggle {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+}
+.dark-toggle:focus { box-shadow: 0 0 0 6px rgba(106,77,244,0.12); outline: none; }
+
+/* Page title */
+.page-title {
+  width: min(100%, var(--max-width));
+  margin: 0 0 14px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--purple-600);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  display:flex;
+  align-items:center;
+  gap: 12px;
+}
+.page-title span { color: #3b2a7a; font-weight:800; }
+
+/* Main container (glass card) */
+.container.glass-card {
+  width: min(96%, var(--max-width));
+  max-width: var(--max-width);
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.5));
+  border-radius: 20px;
+  padding: 26px;
+  box-shadow: var(--shadow-2);
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid rgba(120,88,220,0.08);
+  backdrop-filter: var(--glass-blur);
+  position: relative;
+  overflow: visible;
+}
+
+/* Progress bar container */
+.progress-bar-container {
+  width: 100%;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+progress {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(145,126,189,0.18), rgba(255,241,182,0.12));
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  border: 1px solid rgba(81,45,168,0.06);
+}
+progress::-webkit-progress-bar { background: transparent; border-radius: 999px; }
+progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: var(--accent-gradient);
+  background-size: 200% 100%;
+  transition: width 380ms cubic-bezier(.2,.9,.2,1);
+  animation: progShift 6s linear infinite;
+}
+@keyframes progShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+progress::-moz-progress-bar { background: var(--accent-gradient); border-radius: 999px; }
+
+/* card counter */
+.card-counter {
+  min-width: 78px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--soft-blue);
+  font-size: 0.96rem;
+  user-select: none;
+}
+
+/* Flashcard area */
+.flashcard {
+  width: 100%;
+  max-width: 820px;
+  height: clamp(220px, 36vh, 420px);
+  perspective: 1400px;
+  cursor: pointer;
+  border-radius: var(--card-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flashcard-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 700ms cubic-bezier(.22,.9,.3,1), box-shadow 280ms;
+  transform-style: preserve-3d;
+  border-radius: var(--card-radius);
+  transform-origin: center right;
+  padding: 2.2rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  user-select: none;
+  box-shadow: 0 12px 30px rgba(81,45,168,0.12);
+  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,250,240,0.8));
+}
+
+/* flipped state (triggered by JS toggling .flipped on .flashcard) */
+.flashcard.flipped .flashcard-inner {
+  transform: rotateY(180deg) rotateZ(-1deg) translateY(-3px);
+}
+
+/* front/back faces */
+.flashcard-front,
+.flashcard-back {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backface-visibility: hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 2rem;
+  box-sizing: border-box;
+  text-align: center;
+  word-break: break-word;
+  line-height: 1.45;
+  font-size: clamp(1rem, 2.4vw, 1.3rem);
+  font-weight: 700;
+  color: #38236f;
+}
+
+/* front styling - question */
+.flashcard-front {
+  background: linear-gradient(160deg, rgba(255,247,220,0.9), rgba(255,250,240,0.8));
+  border: 1px solid rgba(255,216,107,0.08);
+  transform: rotateY(0deg);
+  font-style: italic;
+  box-shadow: 0 10px 28px rgba(255,216,107,0.08);
+}
+
+/* back styling - answer */
+.flashcard-back {
+  background: linear-gradient(135deg, rgba(139,109,247,0.12), rgba(201,180,255,0.08));
+  border: 1px solid rgba(81,45,168,0.06);
+  transform: rotateY(180deg);
+  color: #2a1652;
+}
+
+/* subtle decorative corner bubbles */
+.flashcard::before,
+.flashcard::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(18px);
+  opacity: 0.12;
+  pointer-events: none;
+}
+.flashcard::before {
+  width: 180px; height: 180px;
+  background: radial-gradient(circle at 30% 30%, #ffd86b, transparent 40%);
+  left: -20px; top: -40px;
+}
+.flashcard::after {
+  width: 220px; height: 220px;
+  background: radial-gradient(circle at 70% 70%, rgba(106,77,244,0.92), transparent 40%);
+  right: -24px; bottom: -40px;
+}
+
+/* Nav buttons row */
+.nav-buttons {
+  width: 100%;
+  display:flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 4px;
+}
+.nav-buttons button {
+  background: linear-gradient(180deg, var(--purple-500), var(--purple-600));
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 8px 20px rgba(81,45,168,0.14);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.nav-buttons button:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(81,45,168,0.18); }
+
+/* FABs (floating action buttons) */
+.fab-buttons {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: none;
+  display:inline-grid;
+  place-items:center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  background: white;
+  box-shadow: 0 8px 20px rgba(18,115,222,0.12);
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms;
+  border: 1px solid rgba(81,45,168,0.06);
+}
+.fab:hover { transform: translateY(-6px) rotate(-6deg); box-shadow: 0 18px 36px rgba(81,45,168,0.18); }
+.fab[title] { position: relative; }
+
+/* Action buttons style for modal secondary */
+.secondary-btn {
+  background: transparent;
+  border: 2px solid rgba(81,45,168,0.12);
+  color: var(--purple-600);
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(15,10,30,0.38);
+  z-index: 9999;
+  padding: 20px;
+  transition: opacity 240ms ease;
+}
+.modal.hidden { pointer-events:none; opacity:0; }
+.modal-content {
+  width: min(96%, 520px);
+  max-width: 520px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,254,245,0.98));
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: 0 20px 80px rgba(20,12,60,0.18);
+  border: 1px solid rgba(81,45,168,0.06);
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+  transform-origin: center;
+}
+.scale-in { animation: modalIn 320ms cubic-bezier(.2,.9,.2,1) both; }
+@keyframes modalIn {
+  from { transform: translateY(12px) scale(.96); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.modal-content h3 { margin:0; color: var(--purple-600); text-align:center; font-weight:800; }
+
+/* Quiz question & input */
+.quiz-question { font-style: italic; min-height: 52px; display:flex; align-items:center; justify-content:center; color:#3b2a7a; font-weight:700; }
+#quizAnswerInput {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border-radius: 12px;
+  border: 2px solid rgba(81,45,168,0.08);
+  outline: none;
+}
+#quizAnswerInput:focus { box-shadow: 0 6px 20px rgba(106,77,244,0.12); border-color: var(--purple-500); }
+
+/* feedback & progress */
+.quiz-feedback { min-height: 28px; text-align:center; font-weight:800; font-size:0.98rem; color: #333; }
+.quiz-progress { text-align:center; font-weight:700; color: var(--soft-blue); font-size:0.92rem; }
+
+/* Buttons inside modal */
+.quiz-buttons { display:flex; gap: 10px; }
+.quiz-buttons button {
+  flex:1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  border:none;
+  background: linear-gradient(90deg, var(--purple-400), var(--purple-500));
+  color: white;
+}
+
+/* accessible focus outlines */
+button:focus, a:focus, [role="button"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--focus-ring) rgba(106,77,244,0.12);
+  transform: translateY(-2px);
+}
+
+/* Smaller screens adjustments */
+@media (max-width: 900px) {
+  .fab-buttons { right: 14px; bottom: 14px; }
+  .flashcard { height: clamp(220px, 42vh, 360px); }
+  .page-title { font-size: 1.24rem; }
+}
+
+/* Mobile / stacked layout */
+@media (max-width: 520px) {
+  header.navbar { padding: 10px; gap:8px; }
+  header.navbar nav { gap: 8px; flex-wrap:wrap; }
+  .nav-buttons { flex-direction: column; }
+  .nav-buttons button { width: 100%; }
+  .fab { width: 48px; height: 48px; }
+  .container.glass-card { padding: 18px; border-radius: 14px; gap: 12px; }
+}
+
+/* Dark Mode (keeps the palette but adapts contrast) */
+body.dark-mode {
+  background: linear-gradient(180deg,#0f0b19,#0b0c1a);
+  color: #e8e8ff;
+}
+body.dark-mode header.navbar {
+  background: linear-gradient(180deg, rgba(22,14,40,0.3), rgba(12,8,25,0.3));
+  border: 1px solid rgba(106,77,244,0.06);
+}
+body.dark-mode .container.glass-card {
+  background: linear-gradient(180deg, rgba(16,12,40,0.72), rgba(18,12,36,0.6));
+  border: 1px solid rgba(106,77,244,0.06);
+  box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+}
+body.dark-mode .flashcard-inner {
+  background: linear-gradient(180deg, rgba(14,10,32,0.6), rgba(18,12,36,0.55));
+  box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+}
+body.dark-mode .flashcard-front { background: linear-gradient(180deg, rgba(30,26,60,0.48), rgba(30,26,60,0.56)); color: #f3e9ff; }
+body.dark-mode .flashcard-back { background: linear-gradient(160deg, rgba(63,48,120,0.35), rgba(78,60,153,0.28)); color: #fff; }
+body.dark-mode progress::-webkit-progress-value { background: linear-gradient(90deg, #ffd86b, #bfa3ff 60%); }
+
+/* tiny animation on entry */
+.fade-in { animation: fadeSlide 420ms cubic-bezier(.2,.9,.2,1) both; }
+@keyframes fadeSlide {
+  from { opacity:0; transform: translateY(8px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+/* Confetti placeholder class (if you add JS to toggle it) */
+.celebrate {
+  animation: confettiPop 700ms ease-out both;
+}
+@keyframes confettiPop {
+  0% { transform: scale(.94) translateY(6px); opacity: 0; }
+  60% { transform: scale(1.02) translateY(-6px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* preserve accessibility: strong contrast for text on small cards */
+@media (max-width: 380px) {
+  .flashcard-front, .flashcard-back { font-size: 1rem; padding: 1rem; }
+}
+
+
+/* Flip-to-left animation */
+.flashcard.flipped .flashcard-inner {
+  transform: rotateY(-180deg) rotateZ(-1deg) translateY(-3px);
+}
+
+/* Ensure FABs never overlap nav buttons */
+.container.glass-card {
+  padding-bottom: 90px; /* extra space so FABs float without covering buttons */
+}
+
+/* Confetti Canvas Styling */
+#confettiCanvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 99999;
+}
