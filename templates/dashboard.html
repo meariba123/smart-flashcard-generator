@@ -22,7 +22,12 @@
 </div>
 
 <script>
-let currentSetId = "{{ sets[0]._id }}";
+// Safely set currentSetId
+{% if sets and sets|length > 0 %}
+    let currentSetId = "{{ sets[0]._id }}";
+{% else %}
+    let currentSetId = null;
+{% endif %}
 
 const uploadBox = document.querySelector(".upload-box");
 const fileInput = document.querySelector("#notesFile");
@@ -35,6 +40,11 @@ const cancelPreviewBtn = document.getElementById("cancelPreview");
 
 // Upload function via fetch
 function uploadNotes() {
+  if (!currentSetId) {
+    uploadStatus.innerHTML = `<p style="color:red">No flashcard set available. Please create a set first.</p>`;
+    return;
+  }
+
   let file = fileInput.files[0];
   if (!file) {
     alert("Please select a file first.");
@@ -58,19 +68,18 @@ function uploadNotes() {
     }
 
     uploadStatus.innerHTML = "";
-
-    // Clear previous preview flashcards
     previewList.innerHTML = "";
 
     // Add each flashcard as list item with hidden inputs
-    data.flashcards.forEach((fc, index) => {
+    data.flashcards.forEach(fc => {
       let li = document.createElement("li");
       li.innerHTML = `<strong>${fc.question}</strong><br>${fc.answer}`;
-      // hidden inputs to send on form submit
+
       let qInput = document.createElement("input");
       qInput.type = "hidden";
       qInput.name = "questions";
       qInput.value = fc.question;
+
       let aInput = document.createElement("input");
       aInput.type = "hidden";
       aInput.name = "answers";
@@ -81,13 +90,9 @@ function uploadNotes() {
       previewList.appendChild(li);
     });
 
-    // Show preview container and hide upload box
     previewContainer.classList.remove("hidden");
     uploadBox.style.display = "none";
-
-    // Clear previous set name
     setNameInput.value = "";
-
   })
   .catch(err => {
     uploadStatus.innerHTML = `<p style="color:red">Upload failed. Try again.</p>`;
@@ -132,6 +137,5 @@ cancelPreviewBtn.addEventListener("click", () => {
   setNameInput.value = "";
   previewList.innerHTML = "";
 });
-
 </script>
 {% endblock %}
