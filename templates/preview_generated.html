@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h2>Generated Flashcards (Preview)</h2>
+
+  {% if flashcards|length == 0 %}
+    <p>No content extracted from the file.</p>
+  {% else %}
+    <form method="POST" action="{{ url_for('save_generated_flashcards') }}">
+      <ul>
+        {% for question, answer in flashcards %}
+          <li>
+            <strong>{{ question }}</strong><br>{{ answer }}
+            <!-- Hidden inputs to send Q&A to the backend -->
+            <input type="hidden" name="questions" value="{{ question }}">
+            <input type="hidden" name="answers" value="{{ answer }}">
+          </li>
+        {% endfor %}
+      </ul>
+      <br>
+      <label>Enter Flashcard Set Name:</label>
+      <input type="text" name="set_name" required>
+      <button type="submit">Save Flashcards</button>
+    </form>
+  {% endif %}
+
+  <br>
+  <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+{% endblock %}

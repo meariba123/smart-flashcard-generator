@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{ flashcard_set.title }} - Review</title>
+<link rel="stylesheet" href="/static/css/review_flashcards.css" />
+<link rel="stylesheet" href="/static/css/layout.css" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet" />
+</head>
+<body class="flashmind-theme">
+<header class="navbar">
+  <nav>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('create_set') }}">View Flashcards</a>
+    <a href="{{ url_for('choose_review') }}">Review Flashcards</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </nav>
+  <button id="darkModeToggle" class="dark-toggle" aria-label="Toggle Dark Mode">🌙</button>
+</header>
+
+<main class="review-wrapper fade-in">
+  <h2 class="page-title">Review: <span>{{ flashcard_set.name }}</span></h2>
+
+  <div class="container glass-card">
+    <div class="progress-bar-container">
+      <progress id="progress" max="{{ flashcards|length }}" value="1"></progress>
+      <div class="card-counter" id="cardCounter">1 / {{ flashcards|length }}</div>
+    </div>
+
+    <div id="flashcard" class="flashcard" role="button" tabindex="0" aria-label="Flip card">
+      <div class="flashcard-inner">
+        <div class="flashcard-front" id="cardQuestion"></div>
+        <div class="flashcard-back" id="cardAnswer"></div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button id="prevBtn">← Previous</button>
+      <button id="nextBtn">Next →</button>
+      <button id="shuffleBtn">Shuffle 🔀</button>
+    </div>
+
+    <div class="fab-buttons">
+      <button class="fab" id="startQuizBtn" title="Take Quiz">📝</button>
+      <button class="fab" id="downloadBtn" title="Download Flashcards">⬇️</button>
+    </div>
+  </div>
+</main>
+
+<!-- Quiz Modal -->
+<div id="quizModal" class="modal hidden">
+  <div class="modal-content scale-in">
+    <h3>Flashcard Quiz</h3>
+    <div id="quizQuestion" class="quiz-question"></div>
+    <input type="text" id="quizAnswerInput" placeholder="Type your answer..." autocomplete="off" />
+    <div id="quizFeedback" class="quiz-feedback"></div>
+    <div class="quiz-buttons">
+      <button id="submitAnswerBtn">Submit</button>
+      <button id="closeQuizBtn" class="secondary-btn">Close</button>
+    </div>
+    <div class="quiz-progress" id="quizProgress"></div>
+  </div>
+</div>
+
+<!-- Confetti Canvas -->
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+  const flashcardsData = {{ flashcards|tojson }};
+</script>
+<script src="/static/js/review_flashcards.js"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Welcome, {{ session.username }}</h2>
+
+<!-- Upload Modal -->
+<form id="uploadForm" class="upload-box" enctype="multipart/form-data" onsubmit="return false;">
+    <div id="uploadStatus"></div>
+    <input type="file" id="notesFile" name="notes_file" accept=".txt,.docx,.png,.jpg,.jpeg" required>
+    <button type="button" id="uploadSubmit">Upload Notes</button>
+</form>
+
+<!-- Flashcard preview and save form container, hidden initially -->
+<div id="flashcardPreviewContainer" class="hidden">
+  <h3>Generated Flashcards (Preview)</h3>
+  <form id="flashcardPreviewForm" method="POST" action="{{ url_for('save_generated_flashcards') }}">
+    <ul id="flashcardList"></ul>
+    <label for="setNameInput">Enter Flashcard Set Name:</label>
+    <input type="text" id="setNameInput" name="set_name" required>
+    <button type="submit">Save Flashcards</button>
+    <button type="button" id="cancelPreview">Cancel</button>
+  </form>
+</div>
+
+<script>
+let currentSetId = "{{ sets[0]._id }}";
+
+const uploadBox = document.querySelector(".upload-box");
+const fileInput = document.querySelector("#notesFile");
+const uploadStatus = document.getElementById("uploadStatus");
+const previewContainer = document.getElementById("flashcardPreviewContainer");
+const previewList = document.getElementById("flashcardList");
+const previewForm = document.getElementById("flashcardPreviewForm");
+const setNameInput = document.getElementById("setNameInput");
+const cancelPreviewBtn = document.getElementById("cancelPreview");
+
+// Upload function via fetch
+function uploadNotes() {
+  let file = fileInput.files[0];
+  if (!file) {
+    alert("Please select a file first.");
+    return;
+  }
+
+  let formData = new FormData();
+  formData.append("notes_file", file);
+
+  uploadStatus.innerHTML = "Generating flashcards...";
+
+  fetch(`/upload_notes_ajax/${currentSetId}`, {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.error) {
+      uploadStatus.innerHTML = `<p style="color:red">${data.error}</p>`;
+      return;
+    }
+
+    uploadStatus.innerHTML = "";
+
+    // Clear previous preview flashcards
+    previewList.innerHTML = "";
+
+    // Add each flashcard as list item with hidden inputs
+    data.flashcards.forEach((fc, index) => {
+      let li = document.createElement("li");
+      li.innerHTML = `<strong>${fc.question}</strong><br>${fc.answer}`;
+      // hidden inputs to send on form submit
+      let qInput = document.createElement("input");
+      qInput.type = "hidden";
+      qInput.name = "questions";
+      qInput.value = fc.question;
+      let aInput = document.createElement("input");
+      aInput.type = "hidden";
+      aInput.name = "answers";
+      aInput.value = fc.answer;
+
+      li.appendChild(qInput);
+      li.appendChild(aInput);
+      previewList.appendChild(li);
+    });
+
+    // Show preview container and hide upload box
+    previewContainer.classList.remove("hidden");
+    uploadBox.style.display = "none";
+
+    // Clear previous set name
+    setNameInput.value = "";
+
+  })
+  .catch(err => {
+    uploadStatus.innerHTML = `<p style="color:red">Upload failed. Try again.</p>`;
+    console.error(err);
+  });
+}
+
+document.getElementById("uploadSubmit").addEventListener("click", uploadNotes);
+
+// Drag & drop handling
+uploadBox.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  uploadBox.classList.add("dragover");
+});
+
+uploadBox.addEventListener("dragleave", () => {
+  uploadBox.classList.remove("dragover");
+});
+
+uploadBox.addEventListener("drop", (e) => {
+  e.preventDefault();
+  uploadBox.classList.remove("dragover");
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    fileInput.files = files;
+    uploadNotes();
+  }
+});
+
+// Auto-upload when file selected via button
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length > 0) {
+    uploadNotes();
+  }
+});
+
+// Cancel preview button - hides preview and shows upload box again
+cancelPreviewBtn.addEventListener("click", () => {
+  previewContainer.classList.add("hidden");
+  uploadBox.style.display = "block";
+  uploadStatus.innerHTML = "";
+  setNameInput.value = "";
+  previewList.innerHTML = "";
+});
+
+</script>
+{% endblock %}

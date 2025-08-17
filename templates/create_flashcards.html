@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Create Flashcard</h2>
+{% if flashcard_sets %}
+<form method="POST">
+  <label>Choose Set:</label>
+  <select name="flashcard_set_id" required>
+    <option disabled selected value="">-- Select a Set --</option>
+    {% for s in flashcard_sets %}
+      <option value="{{ s._id }}">{{ s.title }}</option>
+    {% endfor %}
+  </select><br><br>
+
+  <input name="question" placeholder="Question" required><br><br>
+  <input name="answer" placeholder="Answer" required><br><br>
+  <button type="submit">Save Flashcard</button>
+</form>
+{% else %}
+<p>No sets yet. <a href="{{ url_for('create_set') }}">Create one first.</a></p>
+{% endif %}
+{% endblock %}

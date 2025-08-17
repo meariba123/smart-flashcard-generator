@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlashMind — AI-Powered Flashcards & Quizzes</title>
+  <link rel="stylesheet" href="static/css/welcome.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet" />
+  <script defer src="static/js/welcome.js"></script>
+</head>
+<body>
+  <header class="header">
+    <nav class="nav container">
+      <a href="#" class="logo">FlashMind</a>
+      <ul class="nav-links">
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#testimonials">Reviews</a></li>
+        <button id="darkModeToggle">🌙</button>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <div class="hero-text">
+        <h1>Turn Your Lecture Notes into Smart Flashcards with AI</h1>
+        <p>Study smarter, not harder. Generate flashcards, take quizzes, and master your knowledge effortlessly.</p>
+        <button id="openSignupBtn" class="btn-primary">Get Started</button>
+      </div>
+      <div class="hero-image" aria-hidden="true">
+        <svg viewBox="0 0 400 300" class="hero-svg" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="50" width="120" height="180" rx="12" ry="12" fill="#ffd54f" />
+          <rect x="150" y="30" width="120" height="180" rx="12" ry="12" fill="#4fc3f7" />
+          <rect x="290" y="70" width="90" height="160" rx="12" ry="12" fill="#81c784" />
+          <circle cx="200" cy="150" r="40" fill="none" stroke="#6a1b9a" stroke-width="6" />
+          <text x="200" y="160" text-anchor="middle" fill="#6a1b9a" font-size="24" font-weight="600">AI</text>
+        </svg>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works container">
+      <h2>How It Works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="icon">📄</div>
+          <h3>Upload Notes</h3>
+          <p>Simply upload your lecture notes in any format.</p>
+        </div>
+        <div class="step">
+          <div class="icon">🤖</div>
+          <h3>AI Flashcard Generation</h3>
+          <p>Our AI reads and converts notes into flashcards instantly.</p>
+        </div>
+        <div class="step">
+          <div class="icon">📝</div>
+          <h3>Take Quizzes</h3>
+          <p>Practice with smart quizzes tailored to your flashcards.</p>
+        </div>
+        <div class="step">
+          <div class="icon">🏆</div>
+          <h3>Track Progress</h3>
+          <p>Monitor your learning and improve your knowledge over time.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features container">
+      <h2>Features You'll Love</h2>
+      <ul class="feature-list">
+        <li>🧠 AI-powered flashcard creation</li>
+        <li>🎯 Adaptive quizzes based on your performance</li>
+        <li>📊 Progress analytics & study reminders</li>
+        <li>💾 Offline mode to study anywhere</li>
+        <li>📱 Mobile & desktop friendly</li>
+        <li>🔒 Your data is private and secure</li>
+      </ul>
+      <button id="openSignupBtn" class="btn-primary">Create Your First Flashcard</button>
+    </section>
+
+    <section id="testimonials" class="testimonials container">
+      <h2>What Students Say</h2>
+      <div class="testimonial-slider">
+        <div class="testimonial active">
+          <p>"FlashMind turned my mountains of notes into manageable flashcards. I improved my grades by 20%!"</p>
+          <span>- Sarah L., University Student</span>
+        </div>
+        <div class="testimonial">
+          <p>"The quizzes are spot on. It really helped me focus on what I didn’t know."</p>
+          <span>- Jake M., College Freshman</span>
+        </div>
+        <div class="testimonial">
+          <p>"A lifesaver during exam season. I recommend it to all my friends."</p>
+          <span>- Emily T., Grad Student</span>
+        </div>
+      </div>
+      <button class="slider-btn prev-btn" aria-label="Previous testimonial">‹</button>
+      <button class="slider-btn next-btn" aria-label="Next testimonial">›</button>
+    </section>
+  </main>
+
+  <footer class="footer container">
+    <p>© 2025 FlashMind • Designed for Students, Powered by AI</p>
+    <div class="socials">
+      <a href="#" aria-label="Twitter">🐦</a>
+      <a href="#" aria-label="Facebook">📘</a>
+      <a href="#" aria-label="Instagram">📸</a>
+    </div>
+  </footer>
+
+  <!-- Modal container -->
+  <div id="modalOverlay" class="modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div id="modalContent" class="modal-content">
+      <button id="closeModalBtn" class="close-btn" aria-label="Close modal">&times;</button>
+
+      {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div id="flashMessage" class="flash-message show">
+        {{ messages[0] }}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+
+       <form id="signupForm" method="POST" action="/signup" class="auth-form fade-form">
+      <h2 id="modalTitleSignup">⭐Join FlashMind!</h2>
+
+      <label for="username">Username</label>
+      <input type="text" name="username" id="username" required />
+
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" required />
+
+      <button type="submit" class="btn-primary">Sign Up</button>
+
+      <p class="switch-auth">
+        Already have an account?
+        <a href="#" id="showLogin">Log in</a>
+      </p>
+    </form>
+
+    <!-- Login Form -->
+    <form id="loginForm" method="POST" action="/login" class="auth-form fade-form hidden">
+      <h2 id="modalTitleLogin">⭐Welcome Back!</h2>
+
+      <label for="loginUsername">Username</label>
+      <input type="text" name="username" id="loginUsername" required />
+
+      <label for="loginPassword">Password</label>
+      <input type="password" name="password" id="loginPassword" required />
+
+      <button type="submit" class="btn-primary">Log In</button>
+
+      <p class="switch-auth">
+        Don't have an account?
+        <a href="#" id="showSignup">Sign up</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<script>
+  const signupForm = document.getElementById('signupForm');
+  const loginForm = document.getElementById('loginForm');
+  const showLogin = document.getElementById('showLogin');
+  const showSignup = document.getElementById('showSignup');
+
+  showLogin.addEventListener('click', function (e) {
+    e.preventDefault();
+    signupForm.classList.add('hidden');
+    loginForm.classList.remove('hidden');
+  });
+
+  showSignup.addEventListener('click', function (e) {
+    e.preventDefault();
+    loginForm.classList.add('hidden');
+    signupForm.classList.remove('hidden');
+  });
+
+  // Optional: Auto-show login form if error message is from login
+  const flashMsg = document.querySelector('.flash-message');
+  if (flashMsg && flashMsg.textContent.includes('Invalid')) {
+    showLogin.click();
+  }
+</script>
+
+</body>
+</html>

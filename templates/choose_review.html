@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Choose Flashcard Set to Review</title>
+    <link rel="stylesheet" href="/static/css/layout.css" />
+    <link rel="stylesheet" href="/static/css/choose_review.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet" />
+</head>
+<body class="flashmind-theme">
+    <h1>Select a Flashcard Set to Review</h1>
+    <div class="set-list">
+        {% if sets|length == 0 %}
+            <p>No flashcard sets found. Please create some first.</p>
+        {% else %}
+            {% for set in sets %}
+                <div class="set-item">
+                    <a href="{{ url_for('review_flashcards', set_id=set._id) }}" class="set-link">
+                        {{ set.name }}
+                    </a>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+</body>
+</html>

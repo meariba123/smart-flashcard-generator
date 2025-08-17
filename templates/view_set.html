@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Set: {{ set_data.title }}</h2>
+<a href="{{ url_for('create_flashcard', set_id=set_data._id) }}">Add another card</a>
+
+{% if flashcards %}
+<ul>
+  {% for c in flashcards %}
+    <li><strong>Q:</strong> {{ c.question }}<br>
+        <strong>A:</strong> {{ c.answer }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No cards in this set yet.</p>
+{% endif %}
+{% endblock %}
