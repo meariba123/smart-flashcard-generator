@@ -697,3 +697,77 @@ body.dark-mode .socials a:focus {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/*for mobile*/
+/* ============================= */
+/* 📱 Responsive Adjustments     */
+/* ============================= */
+@media (max-width: 1024px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .hero-content {
+    max-width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .hero img {
+    max-width: 90%;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  header nav {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .testimonials {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .faq {
+    padding: 20px;
+  }
+
+  .faq-item {
+    font-size: 0.95rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+
+  button, .btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+  }
+
+  .features,
+  .testimonials,
+  .faq {
+    padding: 10px;
+  }
+}
