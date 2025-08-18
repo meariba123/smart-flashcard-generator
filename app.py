@@ -1,6 +1,7 @@
 from bson import ObjectId
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+# app.py
 from nlp import extract_text_from_file, generate_flashcards_from_file, split_into_flashcards
 from flask_bcrypt import Bcrypt
 from pymongo import MongoClient
@@ -106,27 +107,18 @@ def create_flashcard():
         return redirect(url_for('login'))
     user_id = ObjectId(session['user_id'])
     sets = list(flashcardsets.find({'user_id': user_id}))
-
     if request.method == 'POST':
         set_id = request.form['flashcard_set_id']
-        new_card = {
-            "question": request.form['question'],
-            "answer": request.form['answer'],
-            "score": 1.0,  # default score
-            "created_at": datetime.utcnow()
-        }
-
-        # ✅ Push card into the set instead of separate collection
-        flashcardsets.update_one(
-            {"_id": ObjectId(set_id)},
-            {"$push": {"flashcards": new_card}}
-        )
-
+        flashcards.insert_one({
+            'user_id': user_id,
+            'set_id': ObjectId(set_id),
+            'question': request.form['question'],
+            'answer': request.form['answer'],
+            'created_at': datetime.utcnow()
+        })
         flash('Flashcard created!')
         return redirect(url_for('view_set', set_id=set_id))
-
     return render_template('create_flashcards.html', flashcard_sets=sets)
-
 
 # View Set
 @app.route('/set/<set_id>')
@@ -208,66 +200,52 @@ def preview_generated_flashcards(filename):
     return render_template('preview_generated.html', flashcards=generated)
 
 # Save Flashcards to DB
-@app.route("/save_generated_flashcards", methods=["POST"])
+@app.route('/save-generated-flashcards', methods=['POST'])
 def save_generated_flashcards():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
 
-    set_name = request.form.get("set_name")
-    questions = request.form.getlist("questions")
-    answers = request.form.getlist("answers")
-    scores = request.form.getlist("scores")
+    user_id = ObjectId(session['user_id'])
+    questions = request.form.getlist('questions')
+    answers = request.form.getlist('answers')
+    set_name = request.form.get('set_name')
 
-    flashcards = []
-    for q, a, s in zip(questions, answers, scores):
-        flashcards.append({
-            "question": q,
-            "answer": a,
-            "score": float(s) if s else 0.0,
-            "created_at": datetime.utcnow()
-        })
-
-    # ✅ Instead of creating a new set every time, append to existing
-    existing_set = flashcardsets.find_one({
-        "user_id": ObjectId(session["user_id"]),
-        "name": set_name
-    })
-
+    existing_set = flashcardsets.find_one({'user_id': user_id, 'name': set_name})
     if existing_set:
-        flashcardsets.update_one(
-            {"_id": existing_set["_id"]},
-            {"$push": {"flashcards": {"$each": flashcards}}}
-        )
+        set_id = existing_set['_id']
     else:
-        flashcardsets.insert_one({
-            "user_id": ObjectId(session["user_id"]),
-            "name": set_name,
-            "flashcards": flashcards,
-            "created_at": datetime.utcnow()
+        set_id = flashcardsets.insert_one({
+            'user_id': user_id,
+            'name': set_name,
+            'created_at': datetime.utcnow()
+        }).inserted_id
+
+    for q, a in zip(questions, answers):
+        flashcards.insert_one({
+            'user_id': user_id,
+            'set_id': set_id,
+            'question': q,
+            'answer': a,
+            'created_at': datetime.utcnow()
         })
 
-    flash("Flashcards saved successfully!", "success")
-    return redirect(url_for("dashboard"))
-
+    flash('Flashcards saved successfully!', 'success')
+    return redirect(url_for('dashboard'))
 
 # Review Flashcards
-@app.route("/review/<set_id>")
+@app.route('/review/<set_id>')
 def review_flashcards(set_id):
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
     flashcard_set = flashcardsets.find_one({"_id": ObjectId(set_id)})
     if not flashcard_set:
-        flash("Flashcard set not found.", "danger")
-        return redirect(url_for("dashboard"))
+        return "Set not found", 404
 
-    # Fallback: if no "flashcards" field exists, give an empty list
-    flashcards_list = flashcard_set.get("flashcards", [])
+    cards = list(flashcards.find({"set_id": ObjectId(set_id)}))
+    for card in cards:
+        for key in card:
+            if isinstance(card[key], ObjectId):
+                card[key] = str(card[key])
 
-    return render_template("review_flashcards.html", 
-                           flashcard_set=flashcard_set, 
-                           flashcards=flashcards_list)
-
+    return render_template("review_flashcards.html", flashcard_set=flashcard_set, flashcards=cards)
 
 @app.route('/choose_review')
 def choose_review():
@@ -276,8 +254,6 @@ def choose_review():
     user_id = ObjectId(session['user_id'])
     sets = list(flashcardsets.find({'user_id': user_id}))
     return render_template('choose_review.html', sets=sets)
-
-
 
 
 # Main

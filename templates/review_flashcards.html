@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>{{ flashcard_set.name }} - Review</title>
+<title>{{ flashcard_set.title }} - Review</title>
 <link rel="stylesheet" href="/static/css/review_flashcards.css" />
 <link rel="stylesheet" href="/static/css/layout.css" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet" />
@@ -67,7 +67,6 @@
 <canvas id="confettiCanvas"></canvas>
 
 <script>
-  // Each card now includes question, answer, and score
   const flashcardsData = {{ flashcards|tojson }};
 </script>
 <script src="/static/js/review_flashcards.js"></script>
