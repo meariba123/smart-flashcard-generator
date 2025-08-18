@@ -237,9 +237,13 @@ def review_flashcards(set_id):
         flash("Flashcard set not found.", "danger")
         return redirect(url_for("dashboard"))
 
+    # Fallback: if no "flashcards" field exists, give an empty list
+    flashcards_list = flashcard_set.get("flashcards", [])
+
     return render_template("review_flashcards.html", 
                            flashcard_set=flashcard_set, 
-                           flashcards=flashcard_set["flashcards"])
+                           flashcards=flashcards_list)
+
 
 @app.route('/choose_review')
 def choose_review():
