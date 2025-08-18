@@ -3,7 +3,7 @@ import re
 import fitz  # PyMuPDF
 from docx import Document
 
-# Extract text from different file types
+# ---------- File Extraction ----------
 def extract_text_from_file(filepath):
     ext = filepath.rsplit('.', 1)[-1].lower()
     if ext == 'txt':
@@ -23,19 +23,40 @@ def extract_text_from_pdf(filepath):
             text += page.get_text()
     return text
 
-# 🔹 Simple baseline NLP (can be refined later)
+# ---------- Flashcard Generation ----------
 def split_into_flashcards(text):
     flashcards = []
+
+    # 1️⃣ Capture definitions like "X is Y" or "X refers to Y"
+    definition_pattern = re.compile(r'(\b[A-Z][a-zA-Z0-9 ]+\b) (is|are|refers to|means) (.+?)(\.|\n)', re.IGNORECASE)
+    for match in definition_pattern.finditer(text):
+        term = match.group(1).strip()
+        definition = match.group(3).strip()
+        question = f"What is {term}?"
+        flashcards.append((question, definition))
+
+    # 2️⃣ Capture formulas (something = something)
+    formula_pattern = re.compile(r'([A-Za-z0-9\(\)\^\*\+\-/ ]+)=([A-Za-z0-9\(\)\^\*\+\-/ ]+)')
+    for match in formula_pattern.finditer(text):
+        formula = match.group(0).strip()
+        lhs = match.group(1).strip()
+        question = f"What is the formula for {lhs}?"
+        flashcards.append((question, formula))
+
+    # 3️⃣ General sentences (fallback if no match)
     sentences = re.split(r'\. |\? |\! ', text)
     for sentence in sentences:
         sentence = sentence.strip()
-        if len(sentence.split()) >= 5:
-            # Very naive question: first word focus
-            question = f"What is {sentence.split(' ')[0].lower()}?"
+        if len(sentence.split()) >= 6 and not any(sentence in ans for _, ans in flashcards):
+            # Build a simple question from the first noun-like word
+            first_word = sentence.split()[0].lower()
+            question = f"What is {first_word}?"
             flashcards.append((question, sentence))
+
     return flashcards
 
-# 🔹 A wrapper function
+
+# Wrapper
 def generate_flashcards_from_file(filepath):
     text = extract_text_from_file(filepath)
     return split_into_flashcards(text)
