@@ -1,6 +1,7 @@
 from bson import ObjectId
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from nlp import extract_text_from_file, generate_flashcards_from_file, split_into_flashcards
 from flask_bcrypt import Bcrypt
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
