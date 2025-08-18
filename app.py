@@ -106,27 +106,18 @@ def create_flashcard():
         return redirect(url_for('login'))
     user_id = ObjectId(session['user_id'])
     sets = list(flashcardsets.find({'user_id': user_id}))
-
     if request.method == 'POST':
         set_id = request.form['flashcard_set_id']
-        new_card = {
-            "question": request.form['question'],
-            "answer": request.form['answer'],
-            "score": 1.0,  # default score
-            "created_at": datetime.utcnow()
-        }
-
-        # ✅ Push card into the set instead of separate collection
-        flashcardsets.update_one(
-            {"_id": ObjectId(set_id)},
-            {"$push": {"flashcards": new_card}}
-        )
-
+        flashcards.insert_one({
+            'user_id': user_id,
+            'set_id': ObjectId(set_id),
+            'question': request.form['question'],
+            'answer': request.form['answer'],
+            'created_at': datetime.utcnow()
+        })
         flash('Flashcard created!')
         return redirect(url_for('view_set', set_id=set_id))
-
     return render_template('create_flashcards.html', flashcard_sets=sets)
-
 
 # View Set
 @app.route('/set/<set_id>')
@@ -218,37 +209,22 @@ def save_generated_flashcards():
     answers = request.form.getlist("answers")
     scores = request.form.getlist("scores")
 
-    flashcards = []
+    flashcard_set = {
+        "user_id": ObjectId(session["user_id"]),
+        "name": set_name,
+        "flashcards": []
+    }
+
     for q, a, s in zip(questions, answers, scores):
-        flashcards.append({
+        flashcard_set["flashcards"].append({
             "question": q,
             "answer": a,
-            "score": float(s) if s else 0.0,
-            "created_at": datetime.utcnow()
+            "score": float(s)
         })
 
-    # ✅ Instead of creating a new set every time, append to existing
-    existing_set = flashcardsets.find_one({
-        "user_id": ObjectId(session["user_id"]),
-        "name": set_name
-    })
-
-    if existing_set:
-        flashcardsets.update_one(
-            {"_id": existing_set["_id"]},
-            {"$push": {"flashcards": {"$each": flashcards}}}
-        )
-    else:
-        flashcardsets.insert_one({
-            "user_id": ObjectId(session["user_id"]),
-            "name": set_name,
-            "flashcards": flashcards,
-            "created_at": datetime.utcnow()
-        })
-
+    flashcardsets.insert_one(flashcard_set)
     flash("Flashcards saved successfully!", "success")
     return redirect(url_for("dashboard"))
-
 
 # Review Flashcards
 @app.route("/review/<set_id>")
