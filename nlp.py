@@ -138,5 +138,6 @@ def split_into_flashcards(content):
 
 
 def generate_flashcards_from_file(filepath):
-    content = extract_text_from_file(filepath)
-    return split_into_flashcards(content)
+    text = extract_text_from_file(filepath)
+    flashcards = split_into_flashcards(text)
+    return flashcards

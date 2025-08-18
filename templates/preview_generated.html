@@ -6,16 +6,30 @@
     <p>No content extracted from the file.</p>
   {% else %}
     <form method="POST" action="{{ url_for('save_generated_flashcards') }}">
-      <ul>
-        {% for question, answer in flashcards %}
-          <li>
-            <strong>{{ question }}</strong><br>{{ answer }}
-            <!-- Hidden inputs to send Q&A to the backend -->
-            <input type="hidden" name="questions" value="{{ question }}">
-            <input type="hidden" name="answers" value="{{ answer }}">
+      <div class="filter-bar">
+        <label for="minScore">Minimum Confidence:</label>
+        <select id="minScore" onchange="filterCards()">
+          <option value="0">Show All</option>
+          <option value="0.4">≥ 40%</option>
+          <option value="0.6">≥ 60%</option>
+          <option value="0.8">≥ 80%</option>
+        </select>
+      </div>
+
+      <ul id="flashcardList">
+        {% for card in flashcards %}
+          <li class="flashcard-preview" data-score="{{ card.score }}">
+            <strong>{{ card.question }}</strong><br>
+            {{ card.answer }}<br>
+            <small class="score">Confidence: {{ (card.score * 100)|round(0) }}%</small>
+
+            <!-- Hidden inputs to send Q&A to backend -->
+            <input type="hidden" name="questions" value="{{ card.question }}">
+            <input type="hidden" name="answers" value="{{ card.answer }}">
           </li>
         {% endfor %}
       </ul>
+
       <br>
       <label>Enter Flashcard Set Name:</label>
       <input type="text" name="set_name" required>
@@ -25,4 +39,15 @@
 
   <br>
   <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+
+  <script>
+    function filterCards() {
+      const minScore = parseFloat(document.getElementById("minScore").value);
+      const cards = document.querySelectorAll("#flashcardList li");
+      cards.forEach(card => {
+        const score = parseFloat(card.getAttribute("data-score"));
+        card.style.display = (score >= minScore) ? "block" : "none";
+      });
+    }
+  </script>
 {% endblock %}
