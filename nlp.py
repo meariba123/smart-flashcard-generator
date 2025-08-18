@@ -1,6 +1,6 @@
-# nlp.py
+# nlp.py (refined)
 import re
-import fitz  # PyMuPDF
+import fitz
 from docx import Document
 
 # ---------- File Extraction ----------
@@ -16,9 +16,6 @@ def extract_text_from_file(filepath):
     return ""
 
 def extract_text_from_docx(filepath):
-    """
-    Extract headings + text from a .docx file.
-    """
     doc = Document(filepath)
     content = []
     for para in doc.paragraphs:
@@ -26,16 +23,13 @@ def extract_text_from_docx(filepath):
         text = para.text.strip()
         if not text:
             continue
-        if "heading" in style:  # treat as question
+        if "heading" in style:
             content.append(("HEADING", text))
         else:
             content.append(("TEXT", text))
     return content
 
 def extract_text_from_pdf(filepath):
-    """
-    Extract headings (large fonts) + body text from PDF.
-    """
     content = []
     with fitz.open(filepath) as doc:
         for page in doc:
@@ -47,58 +41,102 @@ def extract_text_from_pdf(filepath):
                         if not text:
                             continue
                         font_size = line["spans"][0]["size"]
-                        if font_size >= 14:  # heuristic: bigger text = heading
+                        if font_size >= 14:  
                             content.append(("HEADING", text))
                         else:
                             content.append(("TEXT", text))
     return content
 
+
+# ---------- Scoring ----------
+def score_flashcard(question, answer, source="fallback"):
+    score = 0.5  # base
+
+    # By source
+    if source == "heading": score += 0.4
+    elif source == "definition": score += 0.5
+    elif source == "formula": score += 0.3
+    else: score -= 0.2
+
+    # Answer length (ideal 10–50 words)
+    word_count = len(answer.split())
+    if 10 <= word_count <= 50:
+        score += 0.2
+    elif word_count < 5 or word_count > 80:
+        score -= 0.2
+
+    # Keyword hints
+    if any(kw in answer.lower() for kw in ["is", "are", "refers to", "defined"]):
+        score += 0.1
+
+    return round(max(0, min(1, score)), 2)
+
+
 # ---------- Flashcard Generation ----------
-def split_into_flashcards(text_or_content):
+def split_into_flashcards(content):
     flashcards = []
 
-    # If content is structured (list of tuples), handle headings
-    if isinstance(text_or_content, list):
+    # Structured (list of tuples)
+    if isinstance(content, list):
         current_heading = None
-        for kind, text in text_or_content:
+        for kind, text in content:
             if kind == "HEADING":
                 current_heading = text
             elif kind == "TEXT" and current_heading:
                 q = f"What is {current_heading}?"
-                flashcards.append((q, text))
-                current_heading = None  # reset after using once
+                a = text
+                flashcards.append({
+                    "question": q,
+                    "answer": a,
+                    "score": score_flashcard(q, a, source="heading")
+                })
+                current_heading = None
     else:
-        # Plain text fallback
-        text = text_or_content
+        text = content
 
-        # 1️⃣ Definitions
+        # Definitions
         definition_pattern = re.compile(r'(\b[A-Z][a-zA-Z0-9 ]+\b) (is|are|refers to|means) (.+?)(\.|\n)', re.IGNORECASE)
         for match in definition_pattern.finditer(text):
             term = match.group(1).strip()
             definition = match.group(3).strip()
-            question = f"What is {term}?"
-            flashcards.append((question, definition))
+            q = f"What is {term}?"
+            a = definition
+            flashcards.append({
+                "question": q,
+                "answer": a,
+                "score": score_flashcard(q, a, source="definition")
+            })
 
-        # 2️⃣ Formulas
+        # Formulas
         formula_pattern = re.compile(r'([A-Za-z0-9\(\)\^\*\+\-/ ]+)=([A-Za-z0-9\(\)\^\*\+\-/ ]+)')
         for match in formula_pattern.finditer(text):
             formula = match.group(0).strip()
             lhs = match.group(1).strip()
-            question = f"What is the formula for {lhs}?"
-            flashcards.append((question, formula))
+            q = f"What is the formula for {lhs}?"
+            a = formula
+            flashcards.append({
+                "question": q,
+                "answer": a,
+                "score": score_flashcard(q, a, source="formula")
+            })
 
-        # 3️⃣ Sentences fallback
+        # Fallback sentences
         sentences = re.split(r'\. |\? |\! ', text)
         for sentence in sentences:
             sentence = sentence.strip()
-            if len(sentence.split()) >= 6 and not any(sentence in ans for _, ans in flashcards):
-                first_word = sentence.split()[0].lower()
-                question = f"What is {first_word}?"
-                flashcards.append((question, sentence))
+            if len(sentence.split()) >= 6:
+                q = f"Explain: {sentence.split()[0:3]}..."
+                a = sentence
+                flashcards.append({
+                    "question": q,
+                    "answer": a,
+                    "score": score_flashcard(q, a, source="fallback")
+                })
 
-    return flashcards
+    # Sort by score (best first)
+    return sorted(flashcards, key=lambda x: x["score"], reverse=True)
 
-# Wrapper
+
 def generate_flashcards_from_file(filepath):
     content = extract_text_from_file(filepath)
     return split_into_flashcards(content)
