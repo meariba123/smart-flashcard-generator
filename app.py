@@ -204,27 +204,30 @@ def save_generated_flashcards():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
+    user_id = session["user_id"]
     set_name = request.form.get("set_name")
     questions = request.form.getlist("questions")
     answers = request.form.getlist("answers")
     scores = request.form.getlist("scores")
 
-    flashcard_set = {
-        "user_id": ObjectId(session["user_id"]),
-        "name": set_name,
-        "flashcards": []
-    }
-
+    flashcards = []
     for q, a, s in zip(questions, answers, scores):
-        flashcard_set["flashcards"].append({
+        flashcards.append({
             "question": q,
             "answer": a,
-            "score": float(s)
+            "score": float(s) if s else 0.0
         })
 
-    flashcardsets.insert_one(flashcard_set)
+    # Save directly inside the flashcard set
+    flashcardsets.insert_one({
+        "user_id": ObjectId(user_id),
+        "name": set_name,
+        "flashcards": flashcards
+    })
+
     flash("Flashcards saved successfully!", "success")
     return redirect(url_for("dashboard"))
+
 
 # Review Flashcards
 @app.route("/review/<set_id>")
