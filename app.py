@@ -277,17 +277,6 @@ def choose_review():
     sets = list(flashcardsets.find({'user_id': user_id}))
     return render_template('choose_review.html', sets=sets)
 
-@app.route('/set/<set_id>')
-def view_set(set_id):
-    set_data = flashcardsets.find_one({'_id': ObjectId(set_id)})
-    if not set_data:
-        flash("Set not found", "danger")
-        return redirect(url_for("dashboard"))
-
-    # Pull cards directly from the embedded array
-    cards = set_data.get("flashcards", [])
-
-    return render_template('view_set.html', set_data=set_data, flashcards=cards)
 
 
 
