@@ -1,0 +1,65 @@
+/* Flashcard Sets Section */
+.sets-container {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f5f7fa, #e4ecf7);
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.sets-container h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4a3aff;
+  margin-bottom: 1rem;
+}
+
+.sets-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.set-item {
+  background: white;
+  padding: 1rem;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.set-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.set-item a {
+  text-decoration: none;
+  font-weight: 600;
+  color: #4a3aff;
+  transition: color 0.2s;
+}
+
+.set-item a:hover {
+  color: #2b1ed9;
+}
+
+.review-link {
+  font-size: 0.9rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 10px;
+  background: #4a3aff;
+  color: white !important;
+  text-align: center;
+  transition: background 0.2s;
+}
+
+.review-link:hover {
+  background: #372dd3;
+}

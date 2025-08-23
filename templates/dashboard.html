@@ -83,22 +83,6 @@
   uploadArea.addEventListener('drop',(e)=>{ const f = e.dataTransfer.files?.[0]; if(f){ startUpload(f); } });
 </script>
 
-<!-- Flashcard Sets Section -->
-<div class="sets-container">
-  <h3>Your Flashcard Sets</h3>
-  {% if sets %}
-    <ul class="sets-list">
-      {% for s in sets %}
-        <li class="set-item">
-          <a href="{{ url_for('view_set', set_id=s._id) }}">📂 {{ s.name }}</a>
-          <a href="{{ url_for('review_flashcards', set_id=s._id) }}" class="review-link">▶ Review</a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No sets yet — upload notes above to create one!</p>
-  {% endif %}
-</div>
 
 
 {% endblock %}

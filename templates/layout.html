@@ -11,8 +11,8 @@
   {% if session.username %}
   <nav class="navbar">
     <a href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a href="{{ url_for('create_set') }}">View Flashcards</a>
-    <a href="{{ url_for('choose_review') }}">Review Flashcards</a>
+    <a href="{{ url_for('create_set') }}">View Your Flashcards Sets</a>
+    <a href="{{ url_for('choose_review') }}">Let's Revise!</a>
     <a href="{{ url_for('logout') }}">Logout</a>
   </nav>
   {% endif %}
