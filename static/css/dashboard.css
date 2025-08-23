@@ -219,3 +219,54 @@
     margin-bottom: 10px;
     box-shadow: 0 3px 8px rgba(0,0,0,0.1);
 }
+
+
+.upload-area {
+  border: 2px dashed #9b6bd3;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+  background: #f9f5ff;
+  border-color: #7a4bb7;
+  transform: scale(1.02);
+}
+
+.upload-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.upload-area p {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4a3173;
+  margin-bottom: 4px;
+}
+
+.upload-area small {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+#uploadBtn {
+  margin-top: 12px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #8e6dc4, #7351ac);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#uploadBtn:hover {
+  background: linear-gradient(135deg, #7351ac, #5a3d9a);
+}

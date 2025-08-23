@@ -3,11 +3,15 @@
 <h2>Welcome, {{ session.username }}</h2>
 
 <!-- Upload Modal -->
-<form id="uploadForm" class="upload-box" enctype="multipart/form-data" onsubmit="return false;">
-    <div id="uploadStatus"></div>
-    <input type="file" id="notesFile" name="notes_file" accept=".txt,.docx,.png,.jpg,.jpeg" required>
-    <button type="button" id="uploadSubmit">Upload Notes</button>
-</form>
+<div class="upload-area" id="uploadBox">
+  <div class="upload-icon">📄</div>
+  <p>Upload or drag a file here</p>
+  <small>PDF, DOCX, PPT, Image, TXT</small>
+  <input type="file" id="notesFile" name="notes_file" accept=".txt,.docx,.pdf,.ppt,.png,.jpg,.jpeg" hidden>
+  <button type="button" id="uploadBtn">Choose File</button>
+</div>
+
+<div id="uploadStatus"></div>
 
 <!-- Flashcard preview and save form container, hidden initially -->
 <div id="flashcardPreviewContainer" class="hidden">
