@@ -1,156 +1,90 @@
-{% extends "layout.html" %}
-{% block content %}
-<h2>Welcome, {{ session.username }}</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='/static/css/dashboard.css') }}">
+</head>
+<body>
+  <h2>Welcome, {{ session.username }}</h2>
 
-<!-- Upload Modal -->
-<!-- Modern Upload Area -->
-<div class="upload-area" id="uploadBox">
-  <div class="upload-icon">📂</div>
-  <p>Upload or drag a file here</p>
-  <small>PDF, DOCX, PPT, Image, TXT</small>
-  <input type="file" id="notesFile" name="notes_file" 
-         accept=".txt,.docx,.pdf,.ppt,.png,.jpg,.jpeg" hidden>
-  <button type="button" id="uploadBtn">Choose File</button>
-</div>
+  <!-- Upload Section -->
+  <div class="upload-area" id="uploadBox">
+    <div class="upload-icon">📂</div>
+    <p>Upload or drag a file here</p>
+    <small>PDF, DOCX, PPT, Image, TXT</small>
+    <input type="file" id="notesFile" name="notes_file" 
+          accept=".txt,.docx,.pdf,.ppt,.png,.jpg,.jpeg" hidden>
+    <button type="button" id="uploadBtn">Choose File</button>
+  </div>
 
-<div id="uploadStatus"></div>
+  <div id="uploadStatus"></div>
 
-<!-- Flashcard preview and save form container, hidden initially -->
-<div id="flashcardPreviewContainer" class="hidden">
-  <h3>Generated Flashcards (Preview)</h3>
-  <form id="flashcardPreviewForm" method="POST" action="{{ url_for('save_generated_flashcards') }}">
+  <!-- Flashcard preview + save form (hidden initially) -->
+  <div id="flashcardPreviewContainer" class="flashcard-preview hidden">
+    <h3>Generated Flashcards (Preview)</h3>
     <ul id="flashcardList"></ul>
-    <label for="setNameInput">Enter Flashcard Set Name:</label>
-    <input type="text" id="setNameInput" name="set_name" required>
-    <button type="submit">Save Flashcards</button>
-    <button type="button" id="cancelPreview">Cancel</button>
-  </form>
-</div>
 
-<script>
-// Safely set currentSetId
-{% if sets and sets|length > 0 %}
-    let currentSetId = "{{ sets[0]._id }}";
-{% else %}
-    let currentSetId = null;
-{% endif %}
+    <!-- Save area only shows after preview -->
+    <div class="save-set-box">
+      <label for="setNameInput">Save to Flashcard Set:</label>
+      <input type="text" id="setNameInput" name="set_name" placeholder="Enter new set name" required>
+      <button type="submit" form="flashcardPreviewForm">Save Flashcards</button>
+      <button type="button" id="cancelPreview">Cancel</button>
+    </div>
 
-const uploadBox = document.querySelector(".upload-box");
-const fileInput = document.querySelector("#notesFile");
-const uploadStatus = document.getElementById("uploadStatus");
-const previewContainer = document.getElementById("flashcardPreviewContainer");
-const previewList = document.getElementById("flashcardList");
-const previewForm = document.getElementById("flashcardPreviewForm");
-const setNameInput = document.getElementById("setNameInput");
-const cancelPreviewBtn = document.getElementById("cancelPreview");
+    <!-- Hidden form for saving flashcards -->
+    <form id="flashcardPreviewForm" method="POST" action="{{ url_for('save_generated_flashcards') }}">
+    </form>
+  </div>
 
-// Upload function via fetch
-function uploadNotes() {
-  if (!currentSetId) {
-    uploadStatus.innerHTML = `<p style="color:red">No flashcard set available. Please create a set first.</p>`;
-    return;
-  }
-
-  let file = fileInput.files[0];
-  if (!file) {
-    alert("Please select a file first.");
-    return;
-  }
-
-  let formData = new FormData();
-  formData.append("notes_file", file);
-
-  uploadStatus.innerHTML = "Generating flashcards...";
-
-  fetch(`/upload_notes_ajax/${currentSetId}`, {
-    method: "POST",
-    body: formData
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      uploadStatus.innerHTML = `<p style="color:red">${data.error}</p>`;
-      return;
-    }
-
-    uploadStatus.innerHTML = "";
-    previewList.innerHTML = "";
-
-    // Add each flashcard as list item with hidden inputs
-    data.flashcards.forEach(fc => {
-      let li = document.createElement("li");
-      li.innerHTML = `<strong>${fc.question}</strong><br>${fc.answer}`;
-
-      let qInput = document.createElement("input");
-      qInput.type = "hidden";
-      qInput.name = "questions";
-      qInput.value = fc.question;
-
-      let aInput = document.createElement("input");
-      aInput.type = "hidden";
-      aInput.name = "answers";
-      aInput.value = fc.answer;
-
-      li.appendChild(qInput);
-      li.appendChild(aInput);
-      previewList.appendChild(li);
+  <script>
+    // Button opens hidden file input
+    document.getElementById("uploadBtn").addEventListener("click", () => {
+      document.getElementById("notesFile").click();
     });
 
-    previewContainer.classList.remove("hidden");
-    uploadBox.style.display = "none";
-    setNameInput.value = "";
-  })
-  .catch(err => {
-    uploadStatus.innerHTML = `<p style="color:red">Upload failed. Try again.</p>`;
-    console.error(err);
-  });
-}
+    // Show preview function (called after upload/AI returns flashcards)
+    function showPreview(flashcards) {
+      const previewList = document.getElementById("flashcardList");
+      const previewForm = document.getElementById("flashcardPreviewForm");
+      const previewContainer = document.getElementById("flashcardPreviewContainer");
 
-document.getElementById("uploadSubmit").addEventListener("click", uploadNotes);
+      previewList.innerHTML = "";
+      previewForm.innerHTML = "";
 
-// Drag & drop handling
-uploadBox.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  uploadBox.classList.add("dragover");
-});
+      flashcards.forEach(fc => {
+        let li = document.createElement("li");
+        li.innerHTML = `<strong>${fc.question}</strong><br>${fc.answer}`;
 
-uploadBox.addEventListener("dragleave", () => {
-  uploadBox.classList.remove("dragover");
-});
+        // hidden inputs for saving
+        let qInput = document.createElement("input");
+        qInput.type = "hidden";
+        qInput.name = "questions";
+        qInput.value = fc.question;
 
-uploadBox.addEventListener("drop", (e) => {
-  e.preventDefault();
-  uploadBox.classList.remove("dragover");
-  const files = e.dataTransfer.files;
-  if (files.length > 0) {
-    fileInput.files = files;
-    uploadNotes();
-  }
-});
+        let aInput = document.createElement("input");
+        aInput.type = "hidden";
+        aInput.name = "answers";
+        aInput.value = fc.answer;
 
-// Auto-upload when file selected via button
-fileInput.addEventListener("change", () => {
-  if (fileInput.files.length > 0) {
-    uploadNotes();
-  }
-});
+        previewForm.appendChild(qInput);
+        previewForm.appendChild(aInput);
+        previewList.appendChild(li);
+      });
 
-// Cancel preview button - hides preview and shows upload box again
-cancelPreviewBtn.addEventListener("click", () => {
-  previewContainer.classList.add("hidden");
-  uploadBox.style.display = "block";
-  uploadStatus.innerHTML = "";
-  setNameInput.value = "";
-  previewList.innerHTML = "";
-});
+      previewContainer.classList.remove("hidden");
+      previewContainer.classList.add("show");
+      document.getElementById("uploadBox").style.display = "none";
+    }
 
-
-// Trigger hidden file input when button clicked
-document.getElementById("uploadBtn").addEventListener("click", () => {
-  document.getElementById("notesFile").click();
-});
-
-
-</script>
-
-{% endblock %}
+    // Cancel preview → back to upload
+    document.getElementById("cancelPreview").addEventListener("click", () => {
+      document.getElementById("flashcardPreviewContainer").classList.add("hidden");
+      document.getElementById("flashcardPreviewContainer").classList.remove("show");
+      document.getElementById("uploadBox").style.display = "block";
+    });
+  </script>
+</body>
+</html>

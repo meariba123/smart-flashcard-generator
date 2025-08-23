@@ -277,3 +277,37 @@
   transform: scale(1.05);
 }
 
+
+/* Save Box */
+.save-set-box {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.save-set-box input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #bbb;
+  font-size: 1rem;
+}
+
+.save-set-box button {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #8e6dc4, #7351ac);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.save-set-box button:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #7351ac, #5a3d9a);
+}
