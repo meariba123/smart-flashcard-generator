@@ -118,14 +118,14 @@ def split_into_flashcards(text):
 # Entry: Generate flashcards
 # -------------------------------
 def generate_flashcards(text):
-    """Main entry point for the app."""
     flashcards = split_into_flashcards(text)
-
-    # Final clean: remove blanks
-    clean_cards = [
-        fc for fc in flashcards
-        if fc.get("question") and fc.get("answer")
-        and fc["question"].strip() and fc["answer"].strip()
-    ]
-
+    clean_cards = []
+    for fc in flashcards:
+        q = fc.get("question", "").strip()
+        a = fc.get("answer", "").strip()
+        if q:
+            if not a:
+                a = "Answer not available — expand with your own notes."
+            clean_cards.append({"question": q, "answer": a, "score": fc.get("score", 0)})
     return clean_cards
+
