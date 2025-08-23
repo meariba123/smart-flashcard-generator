@@ -33,39 +33,35 @@ def welcome():
     return render_template('welcome.html')
 
 
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route('/signup', methods=['POST'])
 def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
+    username = request.form['username']
+    password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
 
-        # Check if user exists
-        if users.find_one({'username': username}):
-            flash("User already exists!")
-            return redirect(url_for('welcome'))
+    # Check if user exists
+    if users.find_one({'username': username}):
+        flash("User already exists!")
+        return redirect(url_for('welcome'))
 
-        # Create user
-        result = users.insert_one({'username': username, 'password': password})
+    # Create user
+    result = users.insert_one({'username': username, 'password': password})
 
-        # Auto-login
-        session['username'] = username
-        session['user_id'] = str(result.inserted_id)
+    # Auto-login
+    session['username'] = username
+    session['user_id'] = str(result.inserted_id)
 
-        flash("Welcome to FlashMind!")
-        return redirect(url_for('dashboard'))
-
-    return redirect(url_for('welcome'))
+    flash("Welcome to FlashMind!")
+    return redirect(url_for('dashboard'))
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        user = users.find_one({'username': request.form['username']})
-        if user and bcrypt.check_password_hash(user['password'], request.form['password']):
-            session['username'] = user['username']
-            session['user_id'] = str(user['_id'])
-            return redirect(url_for('dashboard'))
-        flash("Invalid credentials")
+    user = users.find_one({'username': request.form['username']})
+    if user and bcrypt.check_password_hash(user['password'], request.form['password']):
+        session['username'] = user['username']
+        session['user_id'] = str(user['_id'])
+        return redirect(url_for('dashboard'))
+    flash("Invalid credentials")
     return redirect(url_for('welcome'))
 
 
@@ -85,19 +81,18 @@ def dashboard():
 
 
 # ------------------ Create Flashcard Set ------------------
-@app.route('/create-set', methods=['GET', 'POST'])
+@app.route('/create-set', methods=['POST'])
 def create_set():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    if request.method == 'POST':
-        flashcardsets.insert_one({
-            'user_id': ObjectId(session['user_id']),
-            'name': request.form['title'],
-            'created_at': datetime.utcnow()
-        })
-        flash("Set created!")
-        return redirect(url_for('dashboard'))
-    return render_template('create_set.html')
+
+    flashcardsets.insert_one({
+        'user_id': ObjectId(session['user_id']),
+        'name': request.form['title'],
+        'created_at': datetime.utcnow()
+    })
+    flash("Set created!")
+    return redirect(url_for('dashboard'))
 
 
 # ------------------ Create Flashcard Manually ------------------
@@ -129,9 +124,9 @@ def view_set(set_id):
     return render_template('view_set.html', set_data=set_data, flashcards=cards)
 
 
-# ------------------ Upload Notes (AJAX) ------------------
-@app.route('/upload_notes_ajax/<set_id>', methods=['POST'])
-def upload_notes_ajax(set_id):
+# ------------------ Upload Notes (AJAX, Preview Step) ------------------
+@app.route('/upload_notes_ajax', methods=['POST'])
+def upload_notes_ajax():
     if 'notes_file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
@@ -150,16 +145,9 @@ def upload_notes_ajax(set_id):
         "flashcards": [
             {"question": card["question"], "answer": card["answer"], "score": card["score"]}
             for card in flashcards_generated
-        ]
+        ],
+        "filename": filename
     })
-
-
-# ------------------ Preview Generated Flashcards ------------------
-@app.route('/preview-generated/<filename>')
-def preview_generated_flashcards(filename):
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    generated = generate_flashcards_from_file(filepath)
-    return render_template('preview_generated.html', flashcards=generated)
 
 
 # ------------------ Save Generated Flashcards ------------------
@@ -171,18 +159,21 @@ def save_generated_flashcards():
     user_id = ObjectId(session['user_id'])
     questions = request.form.getlist('questions')
     answers = request.form.getlist('answers')
-    set_name = request.form.get('set_name')
+    set_choice = request.form.get('set_choice')
+    new_set_name = request.form.get('new_set_name')
 
-    existing_set = flashcardsets.find_one({'user_id': user_id, 'name': set_name})
-    if existing_set:
-        set_id = existing_set['_id']
+    # If user chose an existing set
+    if set_choice and set_choice != "new":
+        set_id = ObjectId(set_choice)
     else:
+        # Create new set
         set_id = flashcardsets.insert_one({
             'user_id': user_id,
-            'name': set_name,
+            'name': new_set_name,
             'created_at': datetime.utcnow()
         }).inserted_id
 
+    # Insert flashcards
     for q, a in zip(questions, answers):
         flashcards.insert_one({
             'user_id': user_id,
