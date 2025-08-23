@@ -8,7 +8,7 @@
 </head>
 <body class="flashmind-theme">
 <header>
-  {% if session.get('username') %}
+  {% if session.username %}
   <nav class="navbar">
     <a href="{{ url_for('dashboard') }}">Dashboard</a>
     <a href="{{ url_for('create_set') }}">View Flashcards</a>

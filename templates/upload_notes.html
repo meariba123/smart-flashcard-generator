@@ -1,69 +1,10 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>Upload Notes to Generate Flashcards</h2>
+<h2>Upload Notes</h2>
 
-<!-- Upload form (no action, handled by JS) -->
-<form id="uploadForm" enctype="multipart/form-data">
-    <label for="notes_file">Upload your notes (PDF, DOCX, TXT):</label><br><br>
-    <input type="file" name="notes_file" id="notes_file" accept=".pdf,.docx,.txt" required><br><br>
+<form action="{{ url_for('upload_notes') }}" method="POST" enctype="multipart/form-data">
+    <label for="notes">Upload your notes (PDF, DOCX, TXT):</label><br><br>
+    <input type="file" name="notes" accept=".pdf,.docx,.txt" required><br><br>
     <button type="submit">Generate Flashcards</button>
 </form>
-
-<!-- Preview area where flashcards will appear -->
-<div id="previewArea" style="margin-top:20px;"></div>
-
-<script>
-document.getElementById("uploadForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    const fileInput = document.getElementById("notes_file");
-    if (!fileInput.files.length) {
-        alert("Please choose a file first.");
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append("notes_file", fileInput.files[0]);
-
-    // Send file to Flask backend
-    const response = await fetch("{{ url_for('upload_notes_ajax', set_id=set_data._id|string) }}", {
-        method: "POST",
-        body: formData
-    });
-
-    const data = await response.json();
-    const previewArea = document.getElementById("previewArea");
-
-    if (data.error) {
-        previewArea.innerHTML = `<p style="color:red;">${data.error}</p>`;
-        return;
-    }
-
-    // Build flashcard preview dynamically
-    let html = `
-      <h3>Generated Flashcards (Preview)</h3>
-      <form method="POST" action="{{ url_for('save_generated_flashcards') }}">
-        <ul>
-    `;
-    data.flashcards.forEach(card => {
-        html += `
-          <li>
-            <strong>${card.question}</strong><br>
-            ${card.answer}<br>
-            <small>Confidence: ${(card.score * 100).toFixed(0)}%</small>
-            <input type="hidden" name="questions" value="${card.question}">
-            <input type="hidden" name="answers" value="${card.answer}">
-          </li>
-        `;
-    });
-    html += `
-        </ul>
-        <label>Set Name:</label>
-        <input type="text" name="set_name" required>
-        <button type="submit">Save Flashcards</button>
-      </form>
-    `;
-    previewArea.innerHTML = html;
-});
-</script>
 {% endblock %}
