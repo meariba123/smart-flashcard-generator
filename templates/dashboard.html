@@ -1,25 +1,30 @@
+{% extends "layout.html" %}
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='static/css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='/css/dashboard.css') }}">
 </head>
 <body>
   <h2>Welcome, {{ session.username }}</h2>
 
   <!-- Upload Section -->
-  <div class="upload-area" id="uploadBox">
-    <div class="upload-icon">📂</div>
-    <p>Upload or drag a file here</p>
-    <small>PDF, DOCX, PPT, Image, TXT</small>
-    <input type="file" id="notesFile" name="notes_file" 
-          accept=".txt,.docx,.pdf,.ppt,.png,.jpg,.jpeg" hidden>
-    <button type="button" id="uploadBtn">Choose File</button>
+    <div class="upload-box">
+    <form id="uploadForm" enctype="multipart/form-data" method="POST" action="{{ url_for('upload_file') }}">
+      <label for="fileInput" class="upload-label">
+        <div class="upload-icon">📂</div>
+        <p>Upload or drag a file here</p>
+        <p class="hint">PDF, DOCX, PPT, Image, TXT</p>
+        <input type="file" id="fileInput" name="file" style="display:none" required>
+        <button type="submit" class="btn">Choose File</button>
+      </label>
+    </form>
   </div>
-
-  <div id="uploadStatus"></div>
+{% endblock %}
 
   <!-- Flashcard preview + save form (hidden initially) -->
   <div id="flashcardPreviewContainer" class="flashcard-preview hidden">

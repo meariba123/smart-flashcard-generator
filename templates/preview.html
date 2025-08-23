@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h2>Preview Flashcards</h2>
+
+  <form method="POST" action="{{ url_for('save_flashcards') }}">
+    <label for="set_name">Enter Set Name:</label>
+    <input type="text" id="set_name" name="set_name" placeholder="e.g. Biology - Chapter 1" required>
+
+    <ul class="flashcard-preview">
+      {% for card in flashcards %}
+        <li class="flashcard">
+          <strong>Q:</strong> {{ card['question'] }}<br>
+          <strong>A:</strong> {{ card['answer'] }}
+          <input type="hidden" name="questions" value="{{ card['question'] }}">
+          <input type="hidden" name="answers" value="{{ card['answer'] }}">
+        </li>
+      {% endfor %}
+    </ul>
+
+    <button type="submit" class="btn">Save Set</button>
+    <a href="{{ url_for('dashboard') }}" class="btn cancel">Cancel</a>
+  </form>
+{% endblock %}
