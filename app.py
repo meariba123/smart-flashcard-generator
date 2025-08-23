@@ -16,7 +16,8 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback_secret')
 app.config['UPLOAD_FOLDER'] = 'uploads'
-ALLOWED_EXTENSIONS = {'txt', 'docx', 'pdf'}
+ALLOWED_EXTENSIONS = {'txt','doc','docx','pdf','ppt','pptx','png','jpg','jpeg'}
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # ------------------ MongoDB Setup ------------------
 client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
@@ -130,8 +131,8 @@ def view_set(set_id):
 
 
 # ------------------ Upload Notes (AJAX) ------------------
-@app.route('/upload_notes_ajax/<set_id>', methods=['POST'])
-def upload_notes_ajax(set_id):
+@app.route('/upload_notes_ajax', methods=['POST'])
+def upload_notes_ajax():
     if 'notes_file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
@@ -143,15 +144,32 @@ def upload_notes_ajax(set_id):
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
 
-    # Generate flashcards via advanced NLP
+    # Generate flashcards via NLP
     flashcards_generated = generate_flashcards_from_file(filepath)
 
-    return jsonify({
-        "flashcards": [
-            {"question": card["question"], "answer": card["answer"], "score": card["score"]}
-            for card in flashcards_generated
-        ]
-    })
+    # Store temporarily in session
+    session['temp_generated'] = [
+        {"question": c.get("question",""), "answer": c.get("answer",""), "score": c.get("score", 0)}
+        for c in flashcards_generated
+    ]
+    session['temp_filename'] = filename
+
+    return jsonify({"ok": True, "redirect": url_for('review_temp')})
+
+@app.route('/review-temp')
+def review_temp():
+    temp = session.get('temp_generated')
+    if not temp:
+        flash('No generated flashcards to review yet.', 'warning')
+        return redirect(url_for('dashboard'))
+
+    flashcard_set = {"name": "Unsaved Generated Set"}
+    return render_template(
+        'review_flashcards.html',
+        flashcard_set=flashcard_set,
+        flashcards=temp,
+        temp_mode=True
+    )
 
 
 # ------------------ Preview Generated Flashcards ------------------
@@ -192,6 +210,10 @@ def save_generated_flashcards():
             'created_at': datetime.utcnow()
         })
 
+    session.pop('temp_generated', None)
+    session.pop('temp_filename', None)
+
+
     flash('Flashcards saved successfully!', 'success')
     return redirect(url_for('dashboard'))
 
@@ -229,4 +251,3 @@ def allowed_file(filename):
 # ------------------ Main ------------------
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)
-zz

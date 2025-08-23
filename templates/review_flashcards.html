@@ -63,12 +63,47 @@
   </div>
 </div>
 
-<!-- Confetti Canvas -->
-<canvas id="confettiCanvas"></canvas>
+{% if temp_mode %}
+<div class="container glass-card" style="margin-top:18px">
+  <h3 style="margin-bottom:10px">Save these flashcards</h3>
+  <form id="saveGeneratedForm" method="POST" action="{{ url_for('save_generated_flashcards') }}" class="save-set-box">
+    <input type="text" name="set_name" placeholder="Enter set name" required />
+    <button type="submit">Save to New Set</button>
+    <button type="button" id="discardTemp" class="secondary-btn" style="margin-left:6px">Discard</button>
+  </form>
+  <small style="display:block;opacity:.75;margin-top:8px">You can rename the set later from the dashboard.</small>
+</div>
+{% endif %}
 
 <script>
   const flashcardsData = {{ flashcards|tojson }};
+
+  const saveForm = document.getElementById('saveGeneratedForm');
+  if (saveForm){
+    saveForm.addEventListener('submit', function(){
+      [...saveForm.querySelectorAll('input[type="hidden"]')].forEach(el=>el.remove());
+      flashcardsData.forEach(fc => {
+        const q = document.createElement('input'); q.type='hidden'; q.name='questions'; q.value = fc.question || '';
+        const a = document.createElement('input'); a.type='hidden'; a.name='answers';  a.value = fc.answer   || '';
+        saveForm.appendChild(q); saveForm.appendChild(a);
+      });
+    });
+  }
+
+  const discardBtn = document.getElementById('discardTemp');
+  if(discardBtn){ discardBtn.addEventListener('click', ()=>{ window.location.href = '{{ url_for('dashboard') }}'; }); }
+
+  {% if temp_mode %}
+  let saved = false;
+  if(saveForm){ saveForm.addEventListener('submit', ()=>{ saved = true; }); }
+  window.addEventListener('beforeunload', (e)=>{ if(!saved){ e.preventDefault(); e.returnValue=''; } });
+  {% endif %}
 </script>
+
+
+<!-- Confetti Canvas -->
+<canvas id="confettiCanvas"></canvas>
+
 <script src="/static/js/review_flashcards.js"></script>
 </body>
 </html>
