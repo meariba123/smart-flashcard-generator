@@ -3,11 +3,13 @@
 <h2>Welcome, {{ session.username }}</h2>
 
 <!-- Upload Modal -->
+<!-- Modern Upload Area -->
 <div class="upload-area" id="uploadBox">
-  <div class="upload-icon">📄</div>
+  <div class="upload-icon">📂</div>
   <p>Upload or drag a file here</p>
   <small>PDF, DOCX, PPT, Image, TXT</small>
-  <input type="file" id="notesFile" name="notes_file" accept=".txt,.docx,.pdf,.ppt,.png,.jpg,.jpeg" hidden>
+  <input type="file" id="notesFile" name="notes_file" 
+         accept=".txt,.docx,.pdf,.ppt,.png,.jpg,.jpeg" hidden>
   <button type="button" id="uploadBtn">Choose File</button>
 </div>
 
@@ -141,5 +143,14 @@ cancelPreviewBtn.addEventListener("click", () => {
   setNameInput.value = "";
   previewList.innerHTML = "";
 });
+
+
+// Trigger hidden file input when button clicked
+document.getElementById("uploadBtn").addEventListener("click", () => {
+  document.getElementById("notesFile").click();
+});
+
+
 </script>
+
 {% endblock %}

@@ -223,11 +223,13 @@
 
 .upload-area {
   border: 2px dashed #9b6bd3;
-  border-radius: 16px;
-  padding: 40px;
+  border-radius: 20px;
+  padding: 50px 30px;
   text-align: center;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  max-width: 600px;
+  margin: 30px auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -240,33 +242,38 @@
 }
 
 .upload-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
+  font-size: 50px;
+  margin-bottom: 15px;
+  color: #7351ac;
 }
 
 .upload-area p {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 600;
   color: #4a3173;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .upload-area small {
   color: #777;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 #uploadBtn {
-  margin-top: 12px;
-  padding: 10px 20px;
+  margin-top: 15px;
+  padding: 12px 24px;
   background: linear-gradient(135deg, #8e6dc4, #7351ac);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.3s ease;
 }
 
 #uploadBtn:hover {
   background: linear-gradient(135deg, #7351ac, #5a3d9a);
+  transform: scale(1.05);
 }
+
