@@ -107,18 +107,17 @@ def split_into_flashcards(text):
         # -------------------------------
         # 5. Smarter fallback
         # -------------------------------
+        # Long sentence fallback (improved)
         if len(line.split()) > 6 and line.endswith("."):
-            words = line.split()
-            # Try to extract a "subject" (first 4–5 words)
-            subject = " ".join(words[:5])
-            q = f"What does this statement mean about '{subject}...'?"
-            # Try to shorten answer by removing redundant phrases
-            a = re.sub(r"^(In conclusion|Therefore|Thus|So)\s+", "", line)
+            subject = " ".join(line.split()[:6])  # first 6 words as context
+            q = f"In context of '{subject}...', what does this mean?"
+            a = line
             flashcards.append({
                 "question": q,
                 "answer": a,
                 "score": score_flashcard(q, a, "general")
             })
+
 
     # Shuffle for variety, then sort by score
     random.shuffle(flashcards)
