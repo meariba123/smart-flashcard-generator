@@ -4,12 +4,16 @@ import os
 from docx import Document
 from PyPDF2 import PdfReader
 from pptx import Presentation
-from PIL import Image
 import pytesseract
+from PIL import Image
 
-from collections import Counter
+# If using Windows, set the path to your installed Tesseract:
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
+
+# -------------------------------
 # Utility: Score flashcards
+# -------------------------------
 def score_flashcard(question, answer, source="general"):
     """Score flashcards so stronger ones appear first."""
     base_score = 1
@@ -30,10 +34,11 @@ def score_flashcard(question, answer, source="general"):
     return base_score
 
 
-
+# -------------------------------
 # Core: Split into flashcards
+# -------------------------------
 def split_into_flashcards(text):
-    """Extract flashcards from raw text using smarter rules + regex."""
+    """Extract flashcards from raw text using rules + regex."""
 
     flashcards = []
     lines = text.splitlines()
@@ -44,29 +49,12 @@ def split_into_flashcards(text):
             continue
 
         # -------------------------------
-        # 1. Definitions ("X is Y")
-        # -------------------------------
-        def_match = re.match(r"^(.+?)\s+(is|are|means|refers to)\s+(.+)", line, re.I)
-        if def_match:
-            subject = def_match.group(1).strip()
-            definition = def_match.group(3).strip()
-            q = f"What is {subject}?"
-            a = definition
-            flashcards.append({
-                "question": q,
-                "answer": a,
-                "score": score_flashcard(q, a, "definition")
-            })
-            continue
-
-        # -------------------------------
-        # 2. Headings (titles / bullet points)
+        # 1. Heading-based Q&A
         # -------------------------------
         heading_match = re.match(r"^(#+|\d+\.|-)\s*(.+)", line)
         if heading_match:
-            topic = heading_match.group(2).strip()
-            q = f"Explain {topic}"
-            a = f"Key points: {topic}"
+            q = f"Explain {heading_match.group(2).strip()}"
+            a = f"Key points about {heading_match.group(2).strip()}."
             flashcards.append({
                 "question": q,
                 "answer": a,
@@ -75,7 +63,22 @@ def split_into_flashcards(text):
             continue
 
         # -------------------------------
-        # 3. Formula style (math/science)
+        # 2. Definition style ("X is Y")
+        # -------------------------------
+        def_match = re.match(r"^(.+?)\s+(is|are|means|refers to)\s+(.+)", line, re.I)
+        if def_match:
+            subject = def_match.group(1).strip()
+            q = f"What is {subject}?"
+            a = def_match.group(3).strip()
+            flashcards.append({
+                "question": q,
+                "answer": a,
+                "score": score_flashcard(q, a, "definition")
+            })
+            continue
+
+        # -------------------------------
+        # 3. Formula style
         # -------------------------------
         if "=" in line and any(sym in line for sym in ["+", "-", "*", "/", "^"]):
             q = "What does this formula represent?"
@@ -88,12 +91,12 @@ def split_into_flashcards(text):
             continue
 
         # -------------------------------
-        # 4. Notes with keywords (why, how, etc.)
+        # 4. Keyword-based extraction
         # -------------------------------
         keywords = ["define", "explain", "describe", "why", "how", "advantage", "disadvantage"]
         if any(kw in line.lower() for kw in keywords):
             q = line.strip("?") + "?"
-            a = f"Answer: {line}"
+            a = "Expand on this idea: " + line
             flashcards.append({
                 "question": q,
                 "answer": a,
@@ -102,25 +105,15 @@ def split_into_flashcards(text):
             continue
 
         # -------------------------------
-        # 5. General factual sentence → turn into "What does X show?"
-        # -------------------------------
-        if "tells you" in line.lower() or "shows" in line.lower():
-            subject = line.split("tells you")[0].split("shows")[0].strip()
-            q = f"What does {subject} show?"
-            a = line.split("tells you")[-1].split("shows")[-1].strip()
-            flashcards.append({
-                "question": q,
-                "answer": a,
-                "score": score_flashcard(q, a, "general")
-            })
-            continue
-
-        # -------------------------------
-        # 6. Long sentence fallback
+        # 5. Smarter fallback
         # -------------------------------
         if len(line.split()) > 6 and line.endswith("."):
-            q = f"What does this mean: {line.split()[0:5]}..."
-            a = line
+            words = line.split()
+            # Try to extract a "subject" (first 4–5 words)
+            subject = " ".join(words[:5])
+            q = f"What does this statement mean about '{subject}...'?"
+            # Try to shorten answer by removing redundant phrases
+            a = re.sub(r"^(In conclusion|Therefore|Thus|So)\s+", "", line)
             flashcards.append({
                 "question": q,
                 "answer": a,
@@ -134,12 +127,11 @@ def split_into_flashcards(text):
     return flashcards
 
 
-
 # -------------------------------
-# Text Extraction
+# File text extraction
 # -------------------------------
 def extract_text_from_file(filepath):
-    """Extract text from various file types (txt, docx, pdf, pptx, png, jpg)."""
+    """Extract text from various file types including OCR for images."""
     ext = os.path.splitext(filepath)[1].lower()
     text = ""
 
@@ -156,35 +148,30 @@ def extract_text_from_file(filepath):
         pages = [page.extract_text() or "" for page in reader.pages]
         text = "\n".join(pages)
 
+    elif ext in [".png", ".jpg", ".jpeg"]:
+        # OCR image → text
+        img = Image.open(filepath)
+        text = pytesseract.image_to_string(img)
+
     elif ext == ".pptx":
         prs = Presentation(filepath)
-        slides_text = []
+        text_runs = []
         for slide in prs.slides:
             for shape in slide.shapes:
                 if hasattr(shape, "text"):
-                    slides_text.append(shape.text)
-        text = "\n".join(slides_text)
-
-    elif ext in [".png", ".jpg", ".jpeg"]:
-        try:
-            img = Image.open(filepath)
-            text = pytesseract.image_to_string(img)
-        except Exception as e:
-            print(f"OCR failed for {filepath}: {e}")
-            text = ""
+                    text_runs.append(shape.text)
+        text = "\n".join(text_runs)
 
     else:
-        # Unsupported formats return empty
         text = ""
 
     return text
 
 
 # -------------------------------
-# Flashcard Generation
+# Generate flashcards
 # -------------------------------
 def generate_flashcards(text):
-    """Generate cleaned flashcards from raw text."""
     flashcards = split_into_flashcards(text)
     clean_cards = []
     for fc in flashcards:
@@ -202,7 +189,7 @@ def generate_flashcards(text):
 
 
 # -------------------------------
-# Entry: From File
+# Entry: From file
 # -------------------------------
 def generate_flashcards_from_file(filepath):
     """Wrapper: Extract text and generate flashcards."""
