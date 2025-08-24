@@ -33,7 +33,7 @@ def score_flashcard(question, answer, source="general"):
 
 # Core: Split into flashcards
 def split_into_flashcards(text):
-    """Extract flashcards from raw text using rules + regex."""
+    """Extract flashcards from raw text using smarter rules + regex."""
 
     flashcards = []
     lines = text.splitlines()
@@ -44,26 +44,14 @@ def split_into_flashcards(text):
             continue
 
         # -------------------------------
-        # 1. Heading-based Q&A
-        # -------------------------------
-        heading_match = re.match(r"^(#+|\d+\.|-)\s*(.+)", line)
-        if heading_match:
-            q = heading_match.group(2).strip()
-            a = "Explain more about: " + q
-            flashcards.append({
-                "question": q,
-                "answer": a,
-                "score": score_flashcard(q, a, "heading")
-            })
-            continue
-
-        # -------------------------------
-        # 2. Definition style ("X is Y")
+        # 1. Definitions ("X is Y")
         # -------------------------------
         def_match = re.match(r"^(.+?)\s+(is|are|means|refers to)\s+(.+)", line, re.I)
         if def_match:
-            q = f"What is {def_match.group(1).strip()}?"
-            a = def_match.group(0).strip()
+            subject = def_match.group(1).strip()
+            definition = def_match.group(3).strip()
+            q = f"What is {subject}?"
+            a = definition
             flashcards.append({
                 "question": q,
                 "answer": a,
@@ -72,7 +60,22 @@ def split_into_flashcards(text):
             continue
 
         # -------------------------------
-        # 3. Formula style
+        # 2. Headings (titles / bullet points)
+        # -------------------------------
+        heading_match = re.match(r"^(#+|\d+\.|-)\s*(.+)", line)
+        if heading_match:
+            topic = heading_match.group(2).strip()
+            q = f"Explain {topic}"
+            a = f"Key points: {topic}"
+            flashcards.append({
+                "question": q,
+                "answer": a,
+                "score": score_flashcard(q, a, "heading")
+            })
+            continue
+
+        # -------------------------------
+        # 3. Formula style (math/science)
         # -------------------------------
         if "=" in line and any(sym in line for sym in ["+", "-", "*", "/", "^"]):
             q = "What does this formula represent?"
@@ -85,12 +88,12 @@ def split_into_flashcards(text):
             continue
 
         # -------------------------------
-        # 4. Keyword-based extraction
+        # 4. Notes with keywords (why, how, etc.)
         # -------------------------------
         keywords = ["define", "explain", "describe", "why", "how", "advantage", "disadvantage"]
         if any(kw in line.lower() for kw in keywords):
             q = line.strip("?") + "?"
-            a = "Your notes suggest this is important. Expand on: " + line
+            a = f"Answer: {line}"
             flashcards.append({
                 "question": q,
                 "answer": a,
@@ -99,10 +102,24 @@ def split_into_flashcards(text):
             continue
 
         # -------------------------------
-        # 5. General sentence fallback
+        # 5. General factual sentence → turn into "What does X show?"
+        # -------------------------------
+        if "tells you" in line.lower() or "shows" in line.lower():
+            subject = line.split("tells you")[0].split("shows")[0].strip()
+            q = f"What does {subject} show?"
+            a = line.split("tells you")[-1].split("shows")[-1].strip()
+            flashcards.append({
+                "question": q,
+                "answer": a,
+                "score": score_flashcard(q, a, "general")
+            })
+            continue
+
+        # -------------------------------
+        # 6. Long sentence fallback
         # -------------------------------
         if len(line.split()) > 6 and line.endswith("."):
-            q = "What does this mean?"
+            q = f"What does this mean: {line.split()[0:5]}..."
             a = line
             flashcards.append({
                 "question": q,
@@ -115,6 +132,7 @@ def split_into_flashcards(text):
     flashcards.sort(key=lambda x: x["score"], reverse=True)
 
     return flashcards
+
 
 
 # -------------------------------
