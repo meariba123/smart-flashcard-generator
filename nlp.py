@@ -11,9 +11,7 @@ from PIL import Image
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 
-# -------------------------------
 # Utility: Score flashcards
-# -------------------------------
 def score_flashcard(question, answer, source="general"):
     """Score flashcards so stronger ones appear first."""
     base_score = 1
@@ -34,9 +32,7 @@ def score_flashcard(question, answer, source="general"):
     return base_score
 
 
-# -------------------------------
 # Core: Split into flashcards
-# -------------------------------
 def split_into_flashcards(text):
     """Extract flashcards from raw text using rules + regex."""
 
@@ -48,9 +44,8 @@ def split_into_flashcards(text):
         if not line:
             continue
 
-        # -------------------------------
+        
         # 1. Heading-based Q&A
-        # -------------------------------
         heading_match = re.match(r"^(#+|\d+\.|-)\s*(.+)", line)
         if heading_match:
             q = f"Explain {heading_match.group(2).strip()}"
@@ -62,9 +57,7 @@ def split_into_flashcards(text):
             })
             continue
 
-        # -------------------------------
         # 2. Definition style ("X is Y")
-        # -------------------------------
         def_match = re.match(r"^(.+?)\s+(is|are|means|refers to)\s+(.+)", line, re.I)
         if def_match:
             subject = def_match.group(1).strip()
@@ -77,9 +70,8 @@ def split_into_flashcards(text):
             })
             continue
 
-        # -------------------------------
+        
         # 3. Formula style
-        # -------------------------------
         if "=" in line and any(sym in line for sym in ["+", "-", "*", "/", "^"]):
             q = "What does this formula represent?"
             a = line
@@ -90,9 +82,7 @@ def split_into_flashcards(text):
             })
             continue
 
-        # -------------------------------
         # 4. Keyword-based extraction
-        # -------------------------------
         keywords = ["define", "explain", "describe", "why", "how", "advantage", "disadvantage"]
         if any(kw in line.lower() for kw in keywords):
             q = line.strip("?") + "?"
@@ -104,9 +94,7 @@ def split_into_flashcards(text):
             })
             continue
 
-        # -------------------------------
         # 5. Smarter fallback
-        # -------------------------------
         # Long sentence fallback (improved)
         if len(line.split()) > 6 and line.endswith("."):
             subject = " ".join(line.split()[:6])  # first 6 words as context
@@ -126,9 +114,8 @@ def split_into_flashcards(text):
     return flashcards
 
 
-# -------------------------------
+
 # File text extraction
-# -------------------------------
 def extract_text_from_file(filepath):
     """Extract text from various file types including OCR for images."""
     ext = os.path.splitext(filepath)[1].lower()
@@ -167,9 +154,7 @@ def extract_text_from_file(filepath):
     return text
 
 
-# -------------------------------
 # Generate flashcards
-# -------------------------------
 def generate_flashcards(text):
     flashcards = split_into_flashcards(text)
     clean_cards = []
@@ -187,9 +172,7 @@ def generate_flashcards(text):
     return clean_cards
 
 
-# -------------------------------
 # Entry: From file
-# -------------------------------
 def generate_flashcards_from_file(filepath):
     """Wrapper: Extract text and generate flashcards."""
     text = extract_text_from_file(filepath)
