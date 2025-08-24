@@ -9,9 +9,7 @@ import pytesseract
 
 from collections import Counter
 
-# -------------------------------
 # Utility: Score flashcards
-# -------------------------------
 def score_flashcard(question, answer, source="general"):
     """Score flashcards so stronger ones appear first."""
     base_score = 1
