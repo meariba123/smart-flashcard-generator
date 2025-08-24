@@ -7,6 +7,8 @@ from pptx import Presentation
 from PIL import Image
 import pytesseract
 
+from collections import Counter
+
 # -------------------------------
 # Utility: Score flashcards
 # -------------------------------
@@ -30,9 +32,8 @@ def score_flashcard(question, answer, source="general"):
     return base_score
 
 
-# -------------------------------
+
 # Core: Split into flashcards
-# -------------------------------
 def split_into_flashcards(text):
     """Extract flashcards from raw text using rules + regex."""
 
