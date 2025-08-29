@@ -2,10 +2,10 @@ import re
 import random
 import os
 from docx import Document
-from PyPDF2 import PdfReader
-from pptx import Presentation
+from PyPDF2 import PdfReader #to detect pdf readings imported by user to detect readings 
+from pptx import Presentation #this is for upload of files in powerpoint form
 import pytesseract
-from PIL import Image
+from PIL import Image #to detect image readings imported by user 
 
 # If using Windows, set the path to your installed Tesseract:
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -32,7 +32,7 @@ def score_flashcard(question, answer, source="general"):
     return base_score
 
 
-# Core: Split into flashcards
+# splitting into flashcards
 def split_into_flashcards(text):
     """Extract flashcards from raw text using rules + regex."""
 
