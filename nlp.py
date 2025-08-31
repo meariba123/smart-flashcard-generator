@@ -1,17 +1,19 @@
-import re
-import random
-import os
-from docx import Document
-from PyPDF2 import PdfReader #to detect pdf readings imported by user to detect readings 
-from pptx import Presentation #this is for upload of files in powerpoint form
-import pytesseract
-from PIL import Image #to detect image readings imported by user 
+import re #im using this library as it detects pattern in text such as definitions or headings 
+import random #this is used for shuffling the flashcards in different order at random 
+import os #this checks the file file extensions
+from docx import Document #this reads the word documents when user imports them to file (.docx)
+from PyPDF2 import PdfReader #this reads pdf readings imported by user 
+from pptx import Presentation #reads powerpoint slides imported by user 
+import pytesseract #this library and the one below are used together for OCR. (extracting text from images)
+from PIL import Image #to detect image readings imported by user such as .png or.jpg
 
 # If using Windows, set the path to your installed Tesseract:
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 
 # Utility: Score flashcards
+#the purpose of this function "score flashcards" is to assign a "priority score" to a flashcard.
+#commenting on this later!!
 def score_flashcard(question, answer, source="general"):
     """Score flashcards so stronger ones appear first."""
     base_score = 1
@@ -32,30 +34,33 @@ def score_flashcard(question, answer, source="general"):
     return base_score
 
 
-# splitting into flashcards
+#splitting into flashcards
+#the purpose of this function is to break raw text into Q&A flashcards.
 def split_into_flashcards(text):
     """Extract flashcards from raw text using rules + regex."""
 
-    flashcards = []
-    lines = text.splitlines()
+    flashcards = [] #this is an empty list where we will store generated flashcards. 
+    lines = text.splitlines() #splits into text into individual lines (each sentence/paragraph line)
 
-    for line in lines:
-        line = line.strip()
-        if not line:
+    #this loops through every line in the text.
+    for line in lines: 
+        line = line.strip() #line.strip() removes leading/trailing spaces.
+        if not line: #if line is empty after stripping - skip it.
             continue
 
         
-        # 1. Heading-based Q&A
+        #checks if the line looks like a heading (#, a number like 1., or a dash -)
         heading_match = re.match(r"^(#+|\d+\.|-)\s*(.+)", line)
-        if heading_match:
-            q = f"Explain {heading_match.group(2).strip()}"
-            a = f"Key points about {heading_match.group(2).strip()}."
+        if heading_match: #if yes, it creates a flashcard:
+            q = f"Explain {heading_match.group(2).strip()}" #question = "Explain {heading text}"
+            a = f"Key points about {heading_match.group(2).strip()}." #answer ="Key points about {heading text}"
+            #calls score_flashcard() to assign a score
             flashcards.append({
                 "question": q,
                 "answer": a,
                 "score": score_flashcard(q, a, "heading")
             })
-            continue
+            continue #then continue skips to the next line.
 
         # 2. Definition style ("X is Y")
         def_match = re.match(r"^(.+?)\s+(is|are|means|refers to)\s+(.+)", line, re.I)
