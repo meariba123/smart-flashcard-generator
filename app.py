@@ -10,6 +10,9 @@ import os
 
 # Import advanced NLP pipeline
 from nlp import extract_text_from_file, generate_flashcards_from_file
+from progress import progress_bp
+app.register_blueprint(progress_bp)
+
 
 # ------------------ Environment + Flask Setup ------------------
 load_dotenv()
@@ -25,6 +28,7 @@ db = client['flashcarddb']
 users = db['users']
 flashcards = db['flashcards']
 flashcardsets = db['flashcardsets']
+progress = db['progress']
 bcrypt = Bcrypt(app)
 
 
@@ -241,6 +245,7 @@ def choose_review():
     user_id = ObjectId(session['user_id'])
     sets = list(flashcardsets.find({'user_id': user_id}))
     return render_template('choose_review.html', sets=sets)
+
 
 
 # ------------------ File Utility ------------------
