@@ -11,8 +11,6 @@ import os
 # Import advanced NLP pipeline
 from nlp import extract_text_from_file, generate_flashcards_from_file
 from progress import progress_bp
-app.register_blueprint(progress_bp)
-
 
 # ------------------ Environment + Flask Setup ------------------
 load_dotenv()
@@ -21,6 +19,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback_secret')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 ALLOWED_EXTENSIONS = {'txt','doc','docx','pdf','ppt','pptx','png','jpg','jpeg'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+app.register_blueprint(progress_bp)
 
 # ------------------ MongoDB Setup ------------------
 client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
