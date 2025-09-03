@@ -21,13 +21,19 @@ ALLOWED_EXTENSIONS = {'txt','doc','docx','pdf','ppt','pptx','png','jpg','jpeg'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 app.register_blueprint(progress_bp)
 
+
 # ------------------ MongoDB Setup ------------------
 client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
-db = client['flashcarddb']
+
+db = client['flashcarddb']   # define db first
 users = db['users']
 flashcards = db['flashcards']
 flashcardsets = db['flashcardsets']
 progress = db['progress']
+
+# Expose db for blueprints
+app.db = db
+
 bcrypt = Bcrypt(app)
 
 

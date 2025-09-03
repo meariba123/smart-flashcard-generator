@@ -1,13 +1,14 @@
-from flask import Blueprint, request, session, jsonify, render_template
+from flask import Blueprint, request, session, jsonify, render_template, current_app
 from bson import ObjectId
 from datetime import datetime
-from app import db, flashcardsets   # import db + sets from app.py
 
 progress_bp = Blueprint("progress", __name__)
-progress = db['progress']
 
 @progress_bp.route("/update_progress", methods=["POST"])
 def update_progress():
+    db = current_app.db  # get db from Flask app context
+    progress = db["progress"]
+
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 403
 
@@ -41,6 +42,10 @@ def update_progress():
 
 @progress_bp.route("/get_progress")
 def get_progress():
+    db = current_app.db
+    progress = db["progress"]
+    flashcardsets = db["flashcardsets"]
+
     if "user_id" not in session:
         return jsonify([])
 
@@ -57,9 +62,3 @@ def get_progress():
 
     return jsonify(data)
 
-
-@progress_bp.route("/progress")
-def progress_dashboard():
-    if "user_id" not in session:
-        return "Login required", 403
-    return render_template("progress.html")
