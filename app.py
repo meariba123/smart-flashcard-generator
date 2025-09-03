@@ -10,7 +10,7 @@ import os
 
 # Import advanced NLP pipeline
 from nlp import extract_text_from_file, generate_flashcards_from_file
-from progress import progress_bp
+from user_progress import progress_bp
 
 # ------------------ Environment + Flask Setup ------------------
 load_dotenv()
