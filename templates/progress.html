@@ -1,13 +1,7 @@
+{% extends "layout.html" %}
+{% block content %}
 <h2>Your Progress</h2>
-<table>
-  <tr><th>Set</th><th>Attempts</th><th>Average Score</th></tr>
-  {% for p in progress %}
-  <tr>
-    <td>{{ p.set_name }}</td>
-    <td>{{ p.attempts }}</td>
-    <td style="color:{% if p.avgScore >= 80 %}green{% elif p.avgScore >= 50 %}orange{% else %}red{% endif %}">
-    {{ p.avgScore }}%
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+<canvas id="progressChart"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='progress.js') }}"></script>
+{% endblock %}

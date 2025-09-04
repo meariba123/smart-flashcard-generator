@@ -245,31 +245,3 @@ downloadBtn.addEventListener('click', downloadFlashcardsCSV);
 showCard(currentIndex);
 
 
-async function updateProgress(correct) {
-  try {
-    const res = await fetch(updateProgressUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        set_id: setId,
-        correct: correct ? "true" : "false"
-      })
-    });
-    const data = await res.json();
-    console.log("Progress updated:", data);
-  } catch (err) {
-    console.error("Failed to update progress", err);
-  }
-}
-
-
-// Example: when user submits quiz answer
-document.getElementById("submitAnswerBtn").addEventListener("click", () => {
-  const input = document.getElementById("quizAnswerInput").value.trim().toLowerCase();
-  const correctAnswer = flashcards[currentIndex].answer.trim().toLowerCase();
-  const correct = input === correctAnswer;
-
-  document.getElementById("quizFeedback").innerText = correct ? "✅ Correct!" : "❌ Wrong!";
-  
-  updateProgress(correct);
-});
