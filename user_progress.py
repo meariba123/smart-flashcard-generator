@@ -1,4 +1,4 @@
-from flask import Blueprint, request, session, jsonify, render_template, current_app
+from flask import Blueprint, request, session, jsonify, current_app
 from bson import ObjectId
 from datetime import datetime
 
@@ -6,7 +6,7 @@ progress_bp = Blueprint("progress", __name__)
 
 @progress_bp.route("/update_progress", methods=["POST"])
 def update_progress():
-    db = current_app.db  # get db from Flask app context
+    db = current_app.db
     progress = db["progress"]
 
     if "user_id" not in session:
@@ -14,7 +14,7 @@ def update_progress():
 
     user_id = ObjectId(session["user_id"])
     set_id = ObjectId(request.form["set_id"])
-    correct = request.form["correct"] == "true"
+    correct = request.form.get("correct") == "true"
 
     record = progress.find_one({"user_id": user_id, "set_id": set_id})
     if not record:
@@ -51,14 +51,16 @@ def get_progress():
 
     user_id = ObjectId(session["user_id"])
     records = list(progress.find({"user_id": user_id}))
-    data = {"sets": [], "accuracy": []}
+    data = []
 
     for rec in records:
         set_data = flashcardsets.find_one({"_id": rec["set_id"]})
         if set_data:
             acc = (rec["correct"] / rec["total_attempts"]) * 100 if rec["total_attempts"] > 0 else 0
-            data["sets"].append(set_data["name"])
-            data["accuracy"].append(round(acc, 2))
+            data.append({
+                "set_name": set_data["name"],
+                "accuracy": round(acc, 2),
+                "attempts": rec["total_attempts"]
+            })
 
     return jsonify(data)
-

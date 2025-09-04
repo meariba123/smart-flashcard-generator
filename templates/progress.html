@@ -5,12 +5,8 @@
   <tr>
     <td>{{ p.set_name }}</td>
     <td>{{ p.attempts }}</td>
-    <td style="color:
-      {% if p.avgScore >= 80 %}green
-      {% elif p.avgScore >= 50 %}orange
-      {% else %}red
-      {% endif %}">
-      {{ p.avgScore }}%
+    <td style="color:{% if p.avgScore >= 80 %}green{% elif p.avgScore >= 50 %}orange{% else %}red{% endif %}">
+    {{ p.avgScore }}%
     </td>
   </tr>
   {% endfor %}
