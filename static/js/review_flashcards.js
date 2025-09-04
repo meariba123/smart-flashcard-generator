@@ -94,6 +94,23 @@ function startQuiz() {
   quizAnswerInput.focus();
 }
 
+function finishQuiz(score, total){
+  fetch("/save_quiz_result", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      set_id: "{{ flashcard_set._id }}",
+      score: score,
+      total: total
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Quiz saved:", data);
+  });
+}
+
+
 function showQuizQuestion(index) {
   quizAnswerInput.value = '';
   quizFeedback.textContent = '';

@@ -130,6 +130,58 @@ def create_flashcard():
         return redirect(url_for('view_set', set_id=set_id))
     return render_template('create_flashcards.html', flashcard_sets=sets)
 
+@app.route('/save_quiz_result', methods=['POST'])
+def save_quiz_result():
+    if 'user_id' not in session:
+        return jsonify({"error": "Not logged in"}), 403
+
+    data = request.get_json()
+    set_id = data.get("set_id")
+    score = data.get("score")
+    total = data.get("total")
+
+    db['quiz_results'].insert_one({
+        "user_id": ObjectId(session['user_id']),
+        "set_id": ObjectId(set_id),
+        "score": score,
+        "total_questions": total,
+        "timestamp": datetime.utcnow()
+    })
+
+    return jsonify({"status": "ok"})
+
+
+@app.route('/progress')
+def progress():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = ObjectId(session['user_id'])
+
+    pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$group": {
+            "_id": "$set_id",
+            "avgScore": {"$avg": "$score"},
+            "attempts": {"$sum": 1}
+        }}
+    ]
+    results = list(db['quiz_results'].aggregate(pipeline))
+
+    # Join with set names
+    progress_data = []
+    for r in results:
+        set_info = flashcardsets.find_one({"_id": r["_id"]})
+        if set_info:
+            progress_data.append({
+                "set_name": set_info["name"],
+                "avgScore": round(r["avgScore"], 1),
+                "attempts": r["attempts"]
+            })
+
+    return render_template("progress.html", progress=progress_data)
+
+
 
 # ------------------ View Flashcard Set ------------------
 @app.route('/set/<set_id>')
