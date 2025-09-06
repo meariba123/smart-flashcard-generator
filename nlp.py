@@ -13,6 +13,7 @@ from PIL import Image #to detect image readings imported by user such as .png or
 
 # Utility: Score flashcards
 #the purpose of this function "score flashcards" is to assign a "priority score" to a flashcard.
+
 #commenting on this later!!
 def score_flashcard(question, answer, source="general"):
     """Score flashcards so stronger ones appear first."""
