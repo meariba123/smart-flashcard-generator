@@ -89,27 +89,12 @@ function startQuiz() {
   quizIndex = 0;
   quizScore = 0;
   quizModal.classList.remove('hidden');
+  quizAnswerInput.style.display = 'block';   // reset
+  submitAnswerBtn.style.display = 'inline-block'; // reset
   showQuizQuestion(quizIndex);
   updateQuizProgress();
   quizAnswerInput.focus();
 }
-
-function finishQuiz(score, total){
-  fetch("/save_quiz_result", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      set_id: "{{ flashcard_set._id }}",
-      score: score,
-      total: total
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    console.log("Quiz saved:", data);
-  });
-}
-
 
 function showQuizQuestion(index) {
   quizAnswerInput.value = '';
@@ -120,6 +105,7 @@ function showQuizQuestion(index) {
 function submitQuizAnswer() {
   const userAnswer = quizAnswerInput.value.trim().toLowerCase();
   const correctAnswer = flashcards[quizIndex].answer.trim().toLowerCase();
+
   if (userAnswer === correctAnswer) {
     quizScore++;
     quizFeedback.textContent = "✅ Correct!";
@@ -128,19 +114,25 @@ function submitQuizAnswer() {
     quizFeedback.textContent = `❌ Correct answer: ${flashcards[quizIndex].answer}`;
     quizFeedback.style.color = "red";
   }
+
   setTimeout(() => {
     quizIndex++;
     if (quizIndex < flashcards.length) {
       showQuizQuestion(quizIndex);
       updateQuizProgress();
     } else {
+      // Quiz is finished
       quizFeedback.textContent = `🎉 Quiz complete! Score: ${quizScore}/${flashcards.length}`;
       quizAnswerInput.style.display = 'none';
       submitAnswerBtn.style.display = 'none';
       launchConfetti();
+
+      // ✅ Save results to backend
+      endQuiz(quizScore, flashcards.length);
     }
   }, 1500);
 }
+
 
 function updateQuizProgress() {
   quizProgress.textContent = `Question ${quizIndex + 1} of ${flashcards.length}`;
@@ -164,13 +156,16 @@ function endQuiz(score, total) {
   })
   .then(res => res.json())
   .then(data => {
-    if (data.success) {
-      alert(`Quiz saved! You scored ${score}/${total}`);
-    } else {
-      alert("Error saving quiz: " + (data.error || "unknown"));
-    }
-  });
+  if (data.success) {
+    quizFeedback.textContent += " ✅ Progress saved!";
+    quizFeedback.style.color = "blue";
+  } else {
+    quizFeedback.textContent += " ⚠️ Error saving progress.";
+    quizFeedback.style.color = "orange";
+  }
+});
 }
+
 
 
 // ---------------- Dark Mode ----------------
@@ -270,5 +265,3 @@ downloadBtn.addEventListener('click', downloadFlashcardsCSV);
 
 // Init
 showCard(currentIndex);
-
-
