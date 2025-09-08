@@ -1,14 +1,60 @@
 {% extends "layout.html" %}
+
 {% block content %}
-<h2>Your Progress</h2>
-<table>
-  <tr><th>Set</th><th>Score</th><th>Date</th></tr>
-  {% for r in results %}
-    <tr>
-      <td>{{ r.set_name }}</td>
-      <td>{{ r.score }}/{{ r.total }}</td>
-      <td>{{ r.date }}</td>
-    </tr>
-  {% endfor %}
-</table>
+<h2 style="text-align:center; margin: 20px 0;">📊 Your Progress</h2>
+
+<div style="width:80%; margin:auto;">
+  <canvas id="progressChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch("{{ url_for('progress.get_progress') }}")
+  .then(res => res.json())
+  .then(data => {
+    if (data.sets.length === 0) {
+      document.getElementById('progressChart').outerHTML =
+        "<p style='text-align:center; margin-top:20px;'>No progress yet — try a quiz to see results here!</p>";
+      return;
+    }
+
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.sets,
+        datasets: [{
+          label: 'Accuracy (%)',
+          data: data.accuracy,
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.parsed.y + "%";
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            title: { display: true, text: "Accuracy (%)" }
+          },
+          x: {
+            title: { display: true, text: "Flashcard Sets" }
+          }
+        }
+      }
+    });
+  });
+</script>
 {% endblock %}

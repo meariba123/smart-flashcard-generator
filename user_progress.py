@@ -1,4 +1,4 @@
-from flask import Blueprint, request, session, jsonify, current_app
+from flask import Blueprint, request, session, jsonify, current_app, render_template
 from bson import ObjectId
 from datetime import datetime
 
@@ -93,7 +93,13 @@ def update_progress():
     return jsonify({"ok": True})
 
 
-# ---------------- Get Progress ----------------
+# ---------------- Progress Page (renders dashboard) ----------------
+@progress_bp.route("/progress")
+def progress_page():
+    return render_template("progress.html")
+
+
+# ---------------- Get Progress (JSON API for charts) ----------------
 @progress_bp.route("/get_progress")
 def get_progress():
     db = current_app.db
