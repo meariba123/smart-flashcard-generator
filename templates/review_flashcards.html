@@ -63,7 +63,6 @@
   </div>
 </div>
 
-
 {% if temp_mode %}
 <div class="container glass-card" style="margin-top:18px">
   <h3 style="margin-bottom:10px">Save these flashcards</h3>
@@ -78,11 +77,12 @@
 
 <script>
   const flashcardsData = {{ flashcards|tojson }};
+  const flashcardSetId = "{{ flashcard_set._id }}"; // ✅ Inject set ID here
 
   const saveForm = document.getElementById('saveGeneratedForm');
-  if (saveForm){
-    saveForm.addEventListener('submit', function(){
-      [...saveForm.querySelectorAll('input[type="hidden"]')].forEach(el=>el.remove());
+  if (saveForm) {
+    saveForm.addEventListener('submit', function() {
+      [...saveForm.querySelectorAll('input[type="hidden"]')].forEach(el => el.remove());
       flashcardsData.forEach(fc => {
         const q = document.createElement('input'); q.type='hidden'; q.name='questions'; q.value = fc.question || '';
         const a = document.createElement('input'); a.type='hidden'; a.name='answers';  a.value = fc.answer   || '';
@@ -92,15 +92,18 @@
   }
 
   const discardBtn = document.getElementById('discardTemp');
-  if(discardBtn){ discardBtn.addEventListener('click', ()=>{ window.location.href = '{{ url_for('dashboard') }}'; }); }
+  if (discardBtn) {
+    discardBtn.addEventListener('click', () => {
+      window.location.href = '{{ url_for('dashboard') }}';
+    });
+  }
 
   {% if temp_mode %}
   let saved = false;
-  if(saveForm){ saveForm.addEventListener('submit', ()=>{ saved = true; }); }
-  window.addEventListener('beforeunload', (e)=>{ if(!saved){ e.preventDefault(); e.returnValue=''; } });
+  if (saveForm) { saveForm.addEventListener('submit', () => { saved = true; }); }
+  window.addEventListener('beforeunload', (e) => { if (!saved) { e.preventDefault(); e.returnValue=''; } });
   {% endif %}
 </script>
-
 
 <!-- Confetti Canvas -->
 <canvas id="confettiCanvas"></canvas>

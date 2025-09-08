@@ -89,8 +89,6 @@ function startQuiz() {
   quizIndex = 0;
   quizScore = 0;
   quizModal.classList.remove('hidden');
-  quizAnswerInput.style.display = 'block';   // reset
-  submitAnswerBtn.style.display = 'inline-block'; // reset
   showQuizQuestion(quizIndex);
   updateQuizProgress();
   quizAnswerInput.focus();
@@ -133,7 +131,6 @@ function submitQuizAnswer() {
   }, 1500);
 }
 
-
 function updateQuizProgress() {
   quizProgress.textContent = `Question ${quizIndex + 1} of ${flashcards.length}`;
 }
@@ -149,24 +146,27 @@ function endQuiz(score, total) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      set_id: "{{ flashcard_set._id }}", // Jinja injects the set id
+      set_id: flashcardSetId, // ✅ comes from HTML
       score: score,
       total: total
     })
   })
   .then(res => res.json())
   .then(data => {
-  if (data.success) {
-    quizFeedback.textContent += " ✅ Progress saved!";
-    quizFeedback.style.color = "blue";
-  } else {
+    if (data.success) {
+      quizFeedback.textContent += " ✅ Progress saved!";
+      quizFeedback.style.color = "blue";
+    } else {
+      quizFeedback.textContent += " ⚠️ Error saving progress.";
+      quizFeedback.style.color = "orange";
+    }
+  })
+  .catch(err => {
     quizFeedback.textContent += " ⚠️ Error saving progress.";
     quizFeedback.style.color = "orange";
-  }
-});
+    console.error(err);
+  });
 }
-
-
 
 // ---------------- Dark Mode ----------------
 darkToggle.addEventListener('click', () => {
@@ -201,7 +201,6 @@ document.addEventListener('keydown', e => {
     flipCard();
   }
 });
-
 
 // ---------------- Confetti ----------------
 function launchConfetti() {
