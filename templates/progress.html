@@ -1,7 +1,14 @@
 {% extends "layout.html" %}
 {% block content %}
 <h2>Your Progress</h2>
-<canvas id="progressChart"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', filename='progress.js') }}"></script>
+<table>
+  <tr><th>Set</th><th>Score</th><th>Date</th></tr>
+  {% for r in results %}
+    <tr>
+      <td>{{ r.set_name }}</td>
+      <td>{{ r.score }}/{{ r.total }}</td>
+      <td>{{ r.date }}</td>
+    </tr>
+  {% endfor %}
+</table>
 {% endblock %}

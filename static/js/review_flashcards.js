@@ -152,6 +152,27 @@ function closeQuiz() {
   submitAnswerBtn.style.display = 'inline-block';
 }
 
+function endQuiz(score, total) {
+  fetch("/save_quiz_result", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      set_id: "{{ flashcard_set._id }}", // Jinja injects the set id
+      score: score,
+      total: total
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert(`Quiz saved! You scored ${score}/${total}`);
+    } else {
+      alert("Error saving quiz: " + (data.error || "unknown"));
+    }
+  });
+}
+
+
 // ---------------- Dark Mode ----------------
 darkToggle.addEventListener('click', () => {
   document.body.classList.toggle('dark-mode');

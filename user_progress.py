@@ -1,12 +1,64 @@
-from flask import Blueprint, request, session, jsonify, render_template, current_app
+from flask import Blueprint, request, session, jsonify, current_app
 from bson import ObjectId
 from datetime import datetime
 
 progress_bp = Blueprint("progress", __name__)
 
+# ---------------- Save Quiz Result ----------------
+@progress_bp.route("/save_quiz_result", methods=["POST"])
+def save_quiz_result():
+    db = current_app.db
+    progress = db["progress"]
+
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Not logged in"}), 403
+
+    data = request.json
+    try:
+        user_id = ObjectId(session["user_id"])
+        set_id = ObjectId(data["set_id"])
+        score = int(data["score"])
+        total = int(data["total"])
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Invalid data: {str(e)}"}), 400
+
+    # Find or create progress record
+    record = progress.find_one({"user_id": user_id, "set_id": set_id})
+    if not record:
+        record = {
+            "user_id": user_id,
+            "set_id": set_id,
+            "total_attempts": 0,
+            "correct": 0,
+            "quizzes": [],
+            "last_reviewed": datetime.utcnow()
+        }
+
+    # Update aggregate stats
+    record["total_attempts"] += total
+    record["correct"] += score
+    record["last_reviewed"] = datetime.utcnow()
+
+    # Store individual quiz attempt
+    record.setdefault("quizzes", []).append({
+        "score": score,
+        "total": total,
+        "date": datetime.utcnow()
+    })
+
+    progress.update_one(
+        {"user_id": user_id, "set_id": set_id},
+        {"$set": record},
+        upsert=True
+    )
+
+    return jsonify({"success": True, "message": "Quiz result saved!"})
+
+
+# ---------------- Update Progress (per card) ----------------
 @progress_bp.route("/update_progress", methods=["POST"])
 def update_progress():
-    db = current_app.db  # get db from Flask app context
+    db = current_app.db
     progress = db["progress"]
 
     if "user_id" not in session:
@@ -23,6 +75,7 @@ def update_progress():
             "set_id": set_id,
             "total_attempts": 0,
             "correct": 0,
+            "quizzes": [],
             "last_reviewed": datetime.utcnow()
         }
 
@@ -40,6 +93,7 @@ def update_progress():
     return jsonify({"ok": True})
 
 
+# ---------------- Get Progress ----------------
 @progress_bp.route("/get_progress")
 def get_progress():
     db = current_app.db
@@ -61,4 +115,3 @@ def get_progress():
             data["accuracy"].append(round(acc, 2))
 
     return jsonify(data)
-
