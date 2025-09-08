@@ -149,7 +149,7 @@ function endQuiz(score, total) {
       set_id: flashcardSetId, // ✅ comes from HTML
       score: score,
       total: total
-    })
+    }) 
   })
   .then(res => res.json())
   .then(data => {
