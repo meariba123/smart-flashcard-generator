@@ -194,6 +194,11 @@ flashcardEl.addEventListener('touchend', e => {
 
 // ---------------- Keyboard Shortcuts ----------------
 document.addEventListener('keydown', e => {
+  // If user is typing in a text box, don't trigger shortcuts
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    return;
+  }
+
   if (e.key === 'ArrowRight') nextCard();
   if (e.key === 'ArrowLeft') prevCard();
   if (e.key === ' ' || e.key === 'Spacebar') {
@@ -201,6 +206,7 @@ document.addEventListener('keydown', e => {
     flipCard();
   }
 });
+
 
 // ---------------- Confetti ----------------
 function launchConfetti() {
