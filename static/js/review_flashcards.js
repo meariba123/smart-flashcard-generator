@@ -101,35 +101,44 @@ function showQuizQuestion(index) {
 }
 
 function submitQuizAnswer() {
-  const userAnswer = quizAnswerInput.value.trim().toLowerCase();
-  const correctAnswer = flashcards[quizIndex].answer.trim().toLowerCase();
+  const userAnswer = quizAnswerInput.value.trim();
+  const correctAnswer = flashcards[quizIndex].answer.trim();
 
-  if (userAnswer === correctAnswer) {
-    quizScore++;
-    quizFeedback.textContent = "✅ Correct!";
-    quizFeedback.style.color = "green";
-  } else {
-    quizFeedback.textContent = `❌ Correct answer: ${flashcards[quizIndex].answer}`;
-    quizFeedback.style.color = "red";
-  }
-
-  setTimeout(() => {
-    quizIndex++;
-    if (quizIndex < flashcards.length) {
-      showQuizQuestion(quizIndex);
-      updateQuizProgress();
+  fetch("/check_answer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_answer: userAnswer,
+      correct_answer: correctAnswer
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.correct) {
+      quizScore++;
+      quizFeedback.textContent = "✅ Correct!";
+      quizFeedback.style.color = "green";
     } else {
-      // Quiz is finished
-      quizFeedback.textContent = `🎉 Quiz complete! Score: ${quizScore}/${flashcards.length}`;
-      quizAnswerInput.style.display = 'none';
-      submitAnswerBtn.style.display = 'none';
-      launchConfetti();
-
-      // ✅ Save results to backend
-      endQuiz(quizScore, flashcards.length);
+      quizFeedback.textContent = `❌ Correct answer: ${data.correct_answer}`;
+      quizFeedback.style.color = "red";
     }
-  }, 1500);
+
+    setTimeout(() => {
+      quizIndex++;
+      if (quizIndex < flashcards.length) {
+        showQuizQuestion(quizIndex);
+        updateQuizProgress();
+      } else {
+        quizFeedback.textContent = `🎉 Quiz complete! Score: ${quizScore}/${flashcards.length}`;
+        quizAnswerInput.style.display = 'none';
+        submitAnswerBtn.style.display = 'none';
+        launchConfetti();
+        endQuiz(quizScore, flashcards.length);
+      }
+    }, 1500);
+  });
 }
+
 
 function updateQuizProgress() {
   quizProgress.textContent = `Question ${quizIndex + 1} of ${flashcards.length}`;

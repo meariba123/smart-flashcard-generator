@@ -121,7 +121,6 @@ def split_into_flashcards(text):
     return flashcards
 
 
-
 # File text extraction
 def extract_text_from_file(filepath):
     """Extract text from various file types including OCR for images."""
@@ -186,3 +185,24 @@ def generate_flashcards_from_file(filepath):
     if not text.strip():
         return []
     return generate_flashcards(text)
+
+
+
+def is_answer_correct(user_answer: str, correct_answer: str, threshold: int = 70) -> bool:
+    """Check if user answer matches correct answer with fuzzy similarity + keywords."""
+    user_answer = user_answer.lower().strip()
+    correct_answer = correct_answer.lower().strip()
+
+    # Fuzzy match
+    similarity = fuzz.ratio(user_answer, correct_answer)
+    if similarity >= threshold:
+        return True
+
+    # Keyword overlap (simple version)
+    correct_keywords = set(correct_answer.split())
+    user_keywords = set(user_answer.split())
+    overlap = len(correct_keywords & user_keywords) / max(1, len(correct_keywords))
+    if overlap > 0.5:  # e.g., >50% key terms matched
+        return True
+
+    return False

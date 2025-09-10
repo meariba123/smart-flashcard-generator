@@ -9,7 +9,7 @@ from datetime import datetime
 import os
 
 # Import advanced NLP pipeline
-from nlp import extract_text_from_file, generate_flashcards_from_file
+from nlp import extract_text_from_file, generate_flashcards_from_file, is_answer_correct
 from user_progress import progress_bp
 
 # ------------------ Environment + Flask Setup ------------------
@@ -275,6 +275,16 @@ def save_quiz_result():
     return jsonify({"success": True})
 
 
+@app.route("/check_answer", methods=["POST"])
+def check_answer():
+    data = request.get_json()
+    user_answer = data.get("user_answer", "")
+    correct_answer = data.get("correct_answer", "")
+
+    if is_answer_correct(user_answer, correct_answer):
+        return jsonify({"correct": True})
+    else:
+        return jsonify({"correct": False, "correct_answer": correct_answer})
 
 
 # ------------------ File Utility ------------------
