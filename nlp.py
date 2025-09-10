@@ -6,6 +6,7 @@ from PyPDF2 import PdfReader #this reads pdf readings imported by user
 from pptx import Presentation #reads powerpoint slides imported by user 
 import pytesseract #this library and the one below are used together for OCR. (extracting text from images)
 from PIL import Image #to detect image readings imported by user such as .png or.jpg
+from rapidfuzz import fuzz
 
 # If using Windows, set the path to your installed Tesseract:
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
