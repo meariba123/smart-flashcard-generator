@@ -78,7 +78,7 @@ def split_into_flashcards(text):
             continue
 
         
-        # 3. Formula style
+        # Formula style
         if "=" in line and any(sym in line for sym in ["+", "-", "*", "/", "^"]):
             q = "What does this formula represent?"
             a = line
