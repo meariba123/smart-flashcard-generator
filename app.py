@@ -12,7 +12,7 @@ import os
 from nlp import extract_text_from_file, generate_flashcards_from_file, is_answer_correct
 from user_progress import progress_bp
 
-# ------------------ Environment + Flask Setup ------------------
+#  Environment + Flask Setup 
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback_secret')
@@ -37,7 +37,7 @@ app.db = db
 bcrypt = Bcrypt(app)
 
 
-# ------------------ Auth Routes ------------------
+# Auth Routes 
 @app.route('/')
 def welcome():
     return render_template('welcome.html')
@@ -57,7 +57,7 @@ def signup():
         # Create user
         result = users.insert_one({'username': username, 'password': password})
 
-        # Auto-login
+        # Auto login
         session['username'] = username
         session['user_id'] = str(result.inserted_id)
 
