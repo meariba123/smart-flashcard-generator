@@ -22,7 +22,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 app.register_blueprint(progress_bp)
 
 
-# ------------------ MongoDB Setup ------------------
+#  MongoDB Setup 
 client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
 
 db = client['flashcarddb']   # define db first
