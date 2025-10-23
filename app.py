@@ -251,28 +251,28 @@ def choose_review():
     sets = list(flashcardsets.find({'user_id': user_id}))
     return render_template('choose_review.html', sets=sets)
 
-@app.route('/save_quiz_result', methods=['POST'])
-def save_quiz_result():
-    if 'user_id' not in session:
-        return jsonify({"error": "Not logged in"}), 403
+# @app.route('/save_quiz_result', methods=['POST'])
+# def save_quiz_result():
+#     if 'user_id' not in session:
+#         return jsonify({"error": "Not logged in"}), 403
 
-    data = request.json
-    set_id = data.get("set_id")
-    score = data.get("score")
-    total = data.get("total")
+#     data = request.json
+#     set_id = data.get("set_id")
+#     score = data.get("score")
+#     total = data.get("total")
 
-    if not set_id or score is None or total is None:
-        return jsonify({"error": "Missing data"}), 400
+#     if not set_id or score is None or total is None:
+#         return jsonify({"error": "Missing data"}), 400
 
-    progress.insert_one({
-        "user_id": ObjectId(session['user_id']),
-        "set_id": ObjectId(set_id),
-        "score": score,
-        "total": total,
-        "date": datetime.utcnow()
-    })
+#     progress.insert_one({
+#         "user_id": ObjectId(session['user_id']),
+#         "set_id": ObjectId(set_id),
+#         "score": score,
+#         "total": total,
+#         "date": datetime.utcnow()
+#     })
 
-    return jsonify({"success": True})
+#     return jsonify({"success": True})
 
 
 @app.route("/check_answer", methods=["POST"])
