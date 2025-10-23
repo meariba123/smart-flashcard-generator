@@ -1,3 +1,4 @@
+<!-- templates/review_flashcards.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,7 +78,7 @@
 
 <script>
   const flashcardsData = {{ flashcards|tojson }};
-  const flashcardSetId = "{{ flashcard_set._id }}"; // ✅ Inject set ID here
+  const flashcardSetId = "{{ set_id }}";  
 
   const saveForm = document.getElementById('saveGeneratedForm');
   if (saveForm) {

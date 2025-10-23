@@ -6,55 +6,60 @@ from datetime import datetime
 progress_bp = Blueprint("progress", __name__)
 
 # ---------------- Save Quiz Result ----------------
-@progress_bp.route("/save_quiz_result", methods=["POST"])
+@user_progress.route("/save_quiz_result", methods=["POST"])
 def save_quiz_result():
-    db = current_app.db
-    progress = db["progress"]
-
-    if "user_id" not in session:
-        return jsonify({"success": False, "error": "Not logged in"}), 403
-
-    data = request.json
     try:
-        user_id = ObjectId(session["user_id"])
-        set_id = ObjectId(data["set_id"])
-        score = int(data["score"])
-        total = int(data["total"])
-    except Exception as e:
-        return jsonify({"success": False, "error": f"Invalid data: {str(e)}"}), 400
+        # Get current user
+        user_id = session.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Not logged in"}), 401
 
-    # Find or create progress record (aggregate style)
-    record = progress.find_one({"user_id": user_id, "set_id": set_id})
-    if not record:
-        record = {
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        set_id = data.get("set_id")
+        score = data.get("score")
+        total = data.get("total")
+
+        # Validate all fields
+        if not set_id or score is None or total is None:
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Convert to ObjectId safely
+        try:
+            set_obj_id = ObjectId(set_id)
+        except Exception:
+            return jsonify({"error": "Invalid set_id"}), 400
+
+        # Get the flashcard set
+        flashcard_set = mongo.flashcards.find_one({"_id": set_obj_id, "user_id": user_id})
+        if not flashcard_set:
+            return jsonify({"error": "Set not found or not owned by user"}), 404
+
+        # Create progress record
+        progress_data = {
             "user_id": user_id,
-            "set_id": set_id,
-            "total_attempts": 0,
-            "correct": 0,
-            "quizzes": [],
-            "last_reviewed": datetime.utcnow()
+            "set_id": set_obj_id,
+            "score": score,
+            "total": total,
+            "timestamp": datetime.utcnow()
         }
 
-    # Update aggregate stats
-    record["total_attempts"] += total
-    record["correct"] += score
-    record["last_reviewed"] = datetime.utcnow()
+        # Save to user_progress collection
+        mongo.user_progress.insert_one(progress_data)
 
-    # Store individual quiz attempt
-    record.setdefault("quizzes", []).append({
-        "score": score,
-        "total": total,
-        "date": datetime.utcnow()
-    })
+        # Optionally: Update the flashcard set with last quiz info
+        mongo.flashcards.update_one(
+            {"_id": set_obj_id},
+            {"$set": {"last_quiz_score": score, "last_quiz_total": total, "last_quiz_date": datetime.utcnow()}}
+        )
 
-    progress.update_one(
-        {"user_id": user_id, "set_id": set_id},
-        {"$set": record},
-        upsert=True
-    )
+        return jsonify({"message": "Quiz result saved successfully"}), 200
 
-    return jsonify({"success": True, "message": "Quiz result saved!"})
-
+    except Exception as e:
+        print("Error saving quiz result:", e)
+        return jsonify({"error": "Server error"}), 500
 
 # ---------------- Update Progress (per card) ----------------
 @progress_bp.route("/update_progress", methods=["POST"])
