@@ -9,10 +9,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-fetch("{{ url_for('progress.get_progress') }}")
+fetch("{{ url_for('get_progress') if false else url_for('progress.get_progress') }}") // fallback - explicit blueprint endpoint
   .then(res => res.json())
   .then(data => {
-    if (data.sets.length === 0) {
+    if (!data || data.sets.length === 0) {
       document.getElementById('progressChart').outerHTML =
         "<p style='text-align:center; margin-top:20px;'>No progress yet — try a quiz to see results here!</p>";
       return;
@@ -55,6 +55,11 @@ fetch("{{ url_for('progress.get_progress') }}")
         }
       }
     });
+  })
+  .catch(err => {
+    console.error("Error loading progress:", err);
+    document.getElementById('progressChart').outerHTML =
+      "<p style='text-align:center; margin-top:20px;'>Error loading progress data.</p>";
   });
 </script>
 {% endblock %}

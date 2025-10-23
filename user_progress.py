@@ -1,3 +1,4 @@
+# user_progress.py
 from flask import Blueprint, request, session, jsonify, current_app, render_template
 from bson import ObjectId
 from datetime import datetime
@@ -22,7 +23,7 @@ def save_quiz_result():
     except Exception as e:
         return jsonify({"success": False, "error": f"Invalid data: {str(e)}"}), 400
 
-    # Find or create progress record
+    # Find or create progress record (aggregate style)
     record = progress.find_one({"user_id": user_id, "set_id": set_id})
     if not record:
         record = {
@@ -64,9 +65,13 @@ def update_progress():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 403
 
-    user_id = ObjectId(session["user_id"])
-    set_id = ObjectId(request.form["set_id"])
-    correct = request.form["correct"] == "true"
+    try:
+        user_id = ObjectId(session["user_id"])
+        set_id = ObjectId(request.form["set_id"])
+    except Exception as e:
+        return jsonify({"error": f"Invalid ids: {str(e)}"}), 400
+
+    correct = request.form.get("correct", "false") == "true"
 
     record = progress.find_one({"user_id": user_id, "set_id": set_id})
     if not record:
@@ -107,17 +112,18 @@ def get_progress():
     flashcardsets = db["flashcardsets"]
 
     if "user_id" not in session:
-        return jsonify([])
+        return jsonify({"sets": [], "accuracy": []})
 
     user_id = ObjectId(session["user_id"])
     records = list(progress.find({"user_id": user_id}))
     data = {"sets": [], "accuracy": []}
 
     for rec in records:
+        # rec["set_id"] is an ObjectId in DB - safe to use
         set_data = flashcardsets.find_one({"_id": rec["set_id"]})
         if set_data:
             acc = (rec["correct"] / rec["total_attempts"]) * 100 if rec["total_attempts"] > 0 else 0
-            data["sets"].append(set_data["name"])
+            data["sets"].append(set_data.get("name", "Unnamed Set"))
             data["accuracy"].append(round(acc, 2))
 
     return jsonify(data)

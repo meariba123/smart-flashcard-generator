@@ -1,43 +1,45 @@
 # app.py
 from bson import ObjectId
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, current_app
 from flask_bcrypt import Bcrypt
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 
-# Import advanced NLP pipeline
+# Import advanced NLP pipeline (keep your existing nlp.py)
 from nlp import extract_text_from_file, generate_flashcards_from_file, is_answer_correct
+
+# Import blueprint that contains progress routes
 from user_progress import progress_bp
 
-#  Environment + Flask Setup 
+# Environment + Flask Setup
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback_secret')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 ALLOWED_EXTENSIONS = {'txt','doc','docx','pdf','ppt','pptx','png','jpg','jpeg'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-app.register_blueprint(progress_bp)
 
-
-#  MongoDB Setup 
+# MongoDB Setup (same DB name you used)
 client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
-
-db = client['flashcarddb']   # define db first
+db = client['flashcarddb']   # keep same name 'flashcarddb'
 users = db['users']
 flashcards = db['flashcards']
 flashcardsets = db['flashcardsets']
 progress = db['progress']
 
-# Expose db for blueprints
+# Expose db for blueprints to use current_app.db
 app.db = db
 
 bcrypt = Bcrypt(app)
 
+# Register blueprint (no prefix so endpoints are global, matching existing frontend)
+app.register_blueprint(progress_bp)
 
-# Auth Routes 
+
+# ------------------ Auth Routes ------------------
 @app.route('/')
 def welcome():
     return render_template('welcome.html')
@@ -222,7 +224,6 @@ def save_generated_flashcards():
     session.pop('temp_generated', None)
     session.pop('temp_filename', None)
 
-
     flash('Flashcards saved successfully!', 'success')
     return redirect(url_for('dashboard'))
 
@@ -251,30 +252,8 @@ def choose_review():
     sets = list(flashcardsets.find({'user_id': user_id}))
     return render_template('choose_review.html', sets=sets)
 
-# @app.route('/save_quiz_result', methods=['POST'])
-# def save_quiz_result():
-#     if 'user_id' not in session:
-#         return jsonify({"error": "Not logged in"}), 403
 
-#     data = request.json
-#     set_id = data.get("set_id")
-#     score = data.get("score")
-#     total = data.get("total")
-
-#     if not set_id or score is None or total is None:
-#         return jsonify({"error": "Missing data"}), 400
-
-#     progress.insert_one({
-#         "user_id": ObjectId(session['user_id']),
-#         "set_id": ObjectId(set_id),
-#         "score": score,
-#         "total": total,
-#         "date": datetime.utcnow()
-#     })
-
-#     return jsonify({"success": True})
-
-
+# ------------------ Check Answer (AJAX) ------------------
 @app.route("/check_answer", methods=["POST"])
 def check_answer():
     data = request.get_json()
