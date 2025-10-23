@@ -237,20 +237,21 @@ def review_flashcards(set_id):
     user_id = ObjectId(session["user_id"])
     db = current_app.db  # ✅ correctly get the MongoDB connection
 
-    # Find the set first (from flashcardsets)
     flashcard_set = db.flashcardsets.find_one({"_id": ObjectId(set_id), "user_id": user_id})
     if not flashcard_set:
         return "Set not found", 404
 
-    # Then load its flashcards
+    # ✅ Fix: Convert ObjectIds to strings
     flashcards = list(db.flashcards.find({"set_id": ObjectId(set_id), "user_id": user_id}))
+    for card in flashcards:
+        card["_id"] = str(card["_id"])
+        card["set_id"] = str(card["set_id"])
 
     return render_template(
         "review_flashcards.html",
         flashcard_set=flashcard_set,
         flashcards=flashcards
     )
-
 
 
 @app.route('/choose_review')
