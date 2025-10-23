@@ -1,4 +1,5 @@
 # user_progress.py
+
 from flask import Blueprint, request, session, jsonify, current_app, render_template
 from bson import ObjectId
 from datetime import datetime
@@ -6,10 +7,13 @@ from datetime import datetime
 progress_bp = Blueprint("progress", __name__)
 
 # ---------------- Save Quiz Result ----------------
-@user_progress.route("/save_quiz_result", methods=["POST"])
+@progress_bp.route("/save_quiz_result", methods=["POST"])
 def save_quiz_result():
     try:
-        # Get current user
+        db = current_app.db  # ✅ Access the same DB from Flask app
+        flashcards_col = db["flashcards"]
+        user_progress_col = db["user_progress"]
+
         user_id = session.get("user_id")
         if not user_id:
             return jsonify({"error": "Not logged in"}), 401
@@ -32,8 +36,8 @@ def save_quiz_result():
         except Exception:
             return jsonify({"error": "Invalid set_id"}), 400
 
-        # Get the flashcard set
-        flashcard_set = mongo.flashcards.find_one({"_id": set_obj_id, "user_id": user_id})
+        # Verify flashcard set belongs to user
+        flashcard_set = flashcards_col.find_one({"_id": set_obj_id, "user_id": user_id})
         if not flashcard_set:
             return jsonify({"error": "Set not found or not owned by user"}), 404
 
@@ -47,12 +51,16 @@ def save_quiz_result():
         }
 
         # Save to user_progress collection
-        mongo.user_progress.insert_one(progress_data)
+        user_progress_col.insert_one(progress_data)
 
-        # Optionally: Update the flashcard set with last quiz info
-        mongo.flashcards.update_one(
+        # Optionally update flashcard set with last quiz info
+        flashcards_col.update_one(
             {"_id": set_obj_id},
-            {"$set": {"last_quiz_score": score, "last_quiz_total": total, "last_quiz_date": datetime.utcnow()}}
+            {"$set": {
+                "last_quiz_score": score,
+                "last_quiz_total": total,
+                "last_quiz_date": datetime.utcnow()
+            }}
         )
 
         return jsonify({"message": "Quiz result saved successfully"}), 200
@@ -60,6 +68,7 @@ def save_quiz_result():
     except Exception as e:
         print("Error saving quiz result:", e)
         return jsonify({"error": "Server error"}), 500
+
 
 # ---------------- Update Progress (per card) ----------------
 @progress_bp.route("/update_progress", methods=["POST"])
@@ -124,7 +133,6 @@ def get_progress():
     data = {"sets": [], "accuracy": []}
 
     for rec in records:
-        # rec["set_id"] is an ObjectId in DB - safe to use
         set_data = flashcardsets.find_one({"_id": rec["set_id"]})
         if set_data:
             acc = (rec["correct"] / rec["total_attempts"]) * 100 if rec["total_attempts"] > 0 else 0
