@@ -229,24 +229,28 @@ def save_generated_flashcards():
 
 
 # ------------------ Review Flashcards ------------------
-@app.route("/review_flashcards/<set_id>")
+@app.route("/review/<set_id>")
 def review_flashcards(set_id):
-    user_id = session.get("user_id")
-    if not user_id:
+    if "user_id" not in session:
         return redirect(url_for("login"))
 
-    flashcard_set = mongo.db.flashcards.find_one({"_id": ObjectId(set_id), "user_id": user_id})
+    user_id = ObjectId(session["user_id"])
+    db = current_app.db  # ✅ correctly get the MongoDB connection
+
+    # Find the set first (from flashcardsets)
+    flashcard_set = db.flashcardsets.find_one({"_id": ObjectId(set_id), "user_id": user_id})
     if not flashcard_set:
         return "Set not found", 404
 
-    flashcards = flashcard_set.get("cards", [])
+    # Then load its flashcards
+    flashcards = list(db.flashcards.find({"set_id": ObjectId(set_id), "user_id": user_id}))
+
     return render_template(
         "review_flashcards.html",
-        flashcards=flashcards,
         flashcard_set=flashcard_set,
-        set_id=str(flashcard_set["_id"]),  # ✅ Convert ObjectId to string
-        temp_mode=False
+        flashcards=flashcards
     )
+
 
 
 @app.route('/choose_review')
