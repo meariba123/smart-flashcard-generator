@@ -1,88 +1,89 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="dashboard-container">
-  <h2 class="dashboard-title">Welcome, {{ session.username }}</h2>
+<div class="dashboard-wrapper">
+    <div class="welcome-banner">
+        <h1>Welcome, {{ session.username }}! Ready to turn your notes into knowledge?</h1>
+        <div class="action-cards">
+            <div class="info-card">
+                <h3>1. Upload Notes</h3>
+                <p>Select your CS lecture files to extract key concepts.</p>
+            </div>
+            <div class="info-card">
+                <h3>2. View Flashcards</h3>
+                <p>Organized by AI confidence scores.</p>
+            </div>
+            <div class="info-card">
+                <h3>3. Review & Quiz</h3>
+                <p>Monitor your progress through quizzes.</p>
+            </div>
+        </div>
+    </div>
 
-  <!-- Upload / Drag Area -->
-  <form id="uploadForm" class="upload-area" enctype="multipart/form-data" onsubmit="return false;">
-    <div class="upload-icon">📤</div>
-    <p>Upload or drag a file here</p>
-    <small>Supported: PDF, Word, PowerPoint, Images, TXT</small>
+    <div class="upload-section">
+        <h3>Start a New Study Set</h3>
+        <form id="uploadForm" class="drop-zone">
+            <p>Drag and drop your file here, or click to browse.</p>
+            <input type="file" id="notesFile" hidden accept=".pdf,.docx,.txt">
+            <button type="button" onclick="document.getElementById('notesFile').click()" class="btn-study">Choose file</button>
+            <div id="uploadStatus"></div>
+        </form>
+    </div>
 
-    <input
-      id="notesFile"
-      type="file"
-      name="notes_file"
-      accept=".txt,.doc,.docx,.pdf,.ppt,.pptx,.png,.jpg,.jpeg"
-      style="display:none"
-      required
-    />
-    <button id="uploadBtn" type="button" aria-label="Choose file">Choose file</button>
+    <div class="dashboard-layout">
+        <div class="sets-grid">
+            {% for set in sets %}
+            {% set score = set.avg_score | default(0.5) %}
+            <div class="set-card {% if score >= 0.8 %}border-green{% elif score >= 0.5 %}border-amber{% else %}border-red{% endif %}">
+                <h3>{{ set.name }}</h3>
+                <p>Cards: {{ set.count | default(0) }}</p>
 
-    <div id="uploadStatus" style="margin-top:12px"></div>
-  </form>
+                <div class="status-icon {% if score >= 0.8 %}bg-green{% elif score >= 0.5 %}bg-amber{% else %}bg-red{% endif %}">
+                    {% if score >= 0.8 %}✓{% elif score >= 0.5 %}?{% else %}✕{% endif %}
+                </div>
+
+                <p><strong>{% if score >= 0.8 %}High Confidence{% elif score >= 0.5 %}Medium Confidence{% else %}Low Confidence{% endif %}</strong></p>
+                
+                <a href="{{ url_for('view_set', set_id=set._id) }}" class="btn-study">Study Now</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <aside class="progress-sidebar">
+            <h3>Set Progress</h3>
+            <div class="circular-mastery">
+                <span style="font-size: 24px; font-weight: bold;">65%</span>
+                <span>Mastered</span>
+            </div>
+            <p><span style="color:var(--success-green)">●</span> Mastered: 15</p>
+            <p><span style="color:var(--warning-amber)">●</span> Reviewing: 5</p>
+            <p><span style="color:#ddd">●</span> New: 4</p>
+            <hr>
+            <h4>Recent Activity</h4>
+            <p><small>Completed "Psychology Quiz 1" - 85%</small></p>
+        </aside>
+    </div>
 </div>
 
 <script>
-  const uploadArea = document.querySelector('.upload-area');
-  const fileInput = document.getElementById('notesFile');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const uploadStatus = document.getElementById('uploadStatus');
+    const fileInput = document.getElementById('notesFile');
+    const uploadStatus = document.getElementById('uploadStatus');
 
-  function setLoading(isLoading){
-    if(isLoading){
-      uploadStatus.innerHTML = '<span class="loading-dot">Generating flashcards…</span>';
-      uploadArea.classList.add('dragover');
-      uploadBtn.disabled = true;
-    } else {
-      uploadStatus.textContent = '';
-      uploadArea.classList.remove('dragover');
-      uploadBtn.disabled = false;
-    }
-  }
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('notes_file', fileInput.files[0]);
+            uploadStatus.innerHTML = "Processing CS notes...";
 
-  function startUpload(file){
-    if(!file){ return; }
-    const formData = new FormData();
-    formData.append('notes_file', file);
-    setLoading(true);
-
-    fetch('{{ url_for('upload_notes_ajax') }}', { method:'POST', body: formData })
-      .then(r => r.json())
-      .then(data => {
-        if(data.error){
-          uploadStatus.innerHTML = `<span style="color:#c0392b">${data.error}</span>`;
-          setLoading(false);
-          return;
+            fetch('{{ url_for("upload_notes_ajax") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.redirect) window.location.href = data.redirect;
+                else uploadStatus.innerHTML = "Error: " + data.error;
+            });
         }
-        if(data.redirect){
-          window.location.assign(data.redirect);
-        } else {
-          uploadStatus.innerHTML = '<span style="color:#c0392b">Unexpected response.</span>';
-          setLoading(false);
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        uploadStatus.innerHTML = '<span style="color:#c0392b">Upload failed. Try again.</span>';
-        setLoading(false);
-      });
-  }
-
-  // Button triggers file chooser
-  uploadBtn.addEventListener('click', () => fileInput.click());
-
-  // Auto-upload on selection
-  fileInput.addEventListener('change', () => {
-    if(fileInput.files.length > 0){ startUpload(fileInput.files[0]); }
-  });
-
-  // Drag & drop
-  ['dragenter','dragover'].forEach(evt => uploadArea.addEventListener(evt,(e)=>{e.preventDefault(); uploadArea.classList.add('dragover');}));
-  ['dragleave','drop'].forEach(evt => uploadArea.addEventListener(evt,(e)=>{e.preventDefault(); uploadArea.classList.remove('dragover');}));
-  uploadArea.addEventListener('drop',(e)=>{ const f = e.dataTransfer.files?.[0]; if(f){ startUpload(f); } });
+    });
 </script>
-
-
-
 {% endblock %}

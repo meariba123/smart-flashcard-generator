@@ -1,208 +1,110 @@
-import re #im using this library as it detects pattern in text such as definitions or headings 
-import random #this is used for shuffling the flashcards in different order at random 
-import os #this checks the file file extensions
-from docx import Document #this reads the word documents when user imports them to file (.docx)
-from PyPDF2 import PdfReader #this reads pdf readings imported by user 
-from pptx import Presentation #reads powerpoint slides imported by user 
-import pytesseract #this library and the one below are used together for OCR. (extracting text from images)
-from PIL import Image #to detect image readings imported by user such as .png or.jpg
-from rapidfuzz import fuzz #
+import re
+import random
+import os
+import spacy
+from docx import Document
+from PyPDF2 import PdfReader
+from pptx import Presentation
+from PIL import Image
+import pytesseract
+from rapidfuzz import fuzz
 
-# If using Windows, set the path to your installed Tesseract:
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Load spaCy for CS-specific sentence parsing
+try:
+    nlp = spacy.load("en_core_web_sm")
+except:
+    os.system("python -m spacy download en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")
 
-
-# Utility: Score flashcards
-#the purpose of this function "score flashcards" is to assign a "priority score" to a flashcard.
-
-#commenting on this later!!
-def score_flashcard(question, answer, source="general"):
-    """Score flashcards so stronger ones appear first."""
-    base_score = 1
-
-    if source == "heading":
-        base_score += 3
-    elif source == "definition":
-        base_score += 2
-    elif source == "formula":
-        base_score += 2
-    elif source == "keyword":
-        base_score += 2
-
-    # Longer answers are usually richer
-    if len(answer.split()) > 5:
-        base_score += 1
-
-    return base_score
-
-
-#splitting into flashcards
-#the purpose of this function is to break raw text into Q&A flashcards.
-def split_into_flashcards(text):
-    """Extract flashcards from raw text using rules + regex."""
-
-    flashcards = [] #this is an empty list where we will store generated flashcards. 
-    lines = text.splitlines() #splits into text into individual lines (each sentence/paragraph line)
-
-    #this loops through every line in the text.
-    for line in lines: 
-        line = line.strip() #line.strip() removes leading/trailing spaces.
-        if not line: #if line is empty after stripping - skip it.
-            continue
-
-        
-        #checks if the line looks like a heading (#, a number like 1., or a dash -)
-        heading_match = re.match(r"^(#+|\d+\.|-)\s*(.+)", line)
-        if heading_match: #if yes, it creates a flashcard:
-            q = f"Explain {heading_match.group(2).strip()}" #question = "Explain {heading text}"
-            a = f"Key points about {heading_match.group(2).strip()}." #answer ="Key points about {heading text}"
-            #calls score_flashcard() to assign a score
-            flashcards.append({
-                "question": q,
-                "answer": a,
-                "score": score_flashcard(q, a, "heading")
-            })
-            continue #then continue skips to the next line.
-
-        # 2. Definition style ("X is Y")
-        def_match = re.match(r"^(.+?)\s+(is|are|means|refers to)\s+(.+)", line, re.I)
-        if def_match:
-            subject = def_match.group(1).strip()
-            q = f"What is {subject}?"
-            a = def_match.group(3).strip()
-            flashcards.append({
-                "question": q,
-                "answer": a,
-                "score": score_flashcard(q, a, "definition")
-            })
-            continue
-
-        
-        # Formula style
-        if "=" in line and any(sym in line for sym in ["+", "-", "*", "/", "^"]):
-            q = "What does this formula represent?"
-            a = line
-            flashcards.append({
-                "question": q,
-                "answer": a,
-                "score": score_flashcard(q, a, "formula")
-            })
-            continue
-
-        # 4. Keyword-based extraction
-        keywords = ["define", "explain", "describe", "why", "how", "advantage", "disadvantage"]
-        if any(kw in line.lower() for kw in keywords):
-            q = line.strip("?") + "?"
-            a = "Expand on this idea: " + line
-            flashcards.append({
-                "question": q,
-                "answer": a,
-                "score": score_flashcard(q, a, "keyword")
-            })
-            continue
-
-        # 5. Smarter fallback
-        # Long sentence fallback (improved)
-        if len(line.split()) > 6 and line.endswith("."):
-            subject = " ".join(line.split()[:6])  # first 6 words as context
-            q = f"In context of '{subject}...', what does this mean?"
-            a = line
-            flashcards.append({
-                "question": q,
-                "answer": a,
-                "score": score_flashcard(q, a, "general")
-            })
-
-
-    # Shuffle for variety, then sort by score
-    random.shuffle(flashcards)
-    flashcards.sort(key=lambda x: x["score"], reverse=True)
-
-    return flashcards
-
-
-# File text extraction
+# --- FILE EXTRACTION (Keeping your OCR & PowerPoint logic) ---
 def extract_text_from_file(filepath):
-    """Extract text from various file types including OCR for images."""
     ext = os.path.splitext(filepath)[1].lower()
     text = ""
-
-    if ext == ".txt":
-        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-            text = f.read()
-
-    elif ext == ".docx":
-        doc = Document(filepath)
-        text = "\n".join([para.text for para in doc.paragraphs])
-
-    elif ext == ".pdf":
-        reader = PdfReader(filepath)
-        pages = [page.extract_text() or "" for page in reader.pages]
-        text = "\n".join(pages)
-
-    elif ext in [".png", ".jpg", ".jpeg"]:
-        # OCR image → text
-        img = Image.open(filepath)
-        text = pytesseract.image_to_string(img)
-
-    elif ext == ".pptx":
-        prs = Presentation(filepath)
-        text_runs = []
-        for slide in prs.slides:
-            for shape in slide.shapes:
-                if hasattr(shape, "text"):
-                    text_runs.append(shape.text)
-        text = "\n".join(text_runs)
-
-    else:
-        text = ""
-
+    try:
+        if ext == ".txt":
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                text = f.read()
+        elif ext == ".docx":
+            doc = Document(filepath)
+            text = "\n".join([para.text for para in doc.paragraphs])
+        elif ext == ".pdf":
+            reader = PdfReader(filepath)
+            text = "\n".join([page.extract_text() or "" for page in reader.pages])
+        elif ext in [".png", ".jpg", ".jpeg"]:
+            text = pytesseract.image_to_string(Image.open(filepath))
+        elif ext == ".pptx":
+            prs = Presentation(filepath)
+            text = "\n".join([shape.text for slide in prs.slides for shape in slide.shapes if hasattr(shape, "text")])
+    except Exception as e:
+        print(f"Error extracting text: {e}")
     return text
 
+# --- CS-SPECIFIC SCORING (For Traffic Lights) ---
+def calculate_confidence(question, answer, raw_sentence):
+    """Assigns 0.0 to 1.0 for the Traffic Light system."""
+    score = 0.90 # Start high (Green)
+    
+    # CS Keywords boost confidence
+    cs_terms = ['algorithm', 'variable', 'function', 'class', 'complexity', 'data structure', 'binary']
+    if any(term in raw_sentence.lower() for term in cs_terms):
+        score += 0.05
 
-# Generate flashcards
-def generate_flashcards(text):
-    flashcards = split_into_flashcards(text)
-    clean_cards = []
-    for fc in flashcards:
-        q = fc.get("question", "").strip()
-        a = fc.get("answer", "").strip()
-        if q:
-            if not a:
-                a = "Answer not available — expand with your own notes."
-            clean_cards.append({
-                "question": q,
-                "answer": a,
-                "score": fc.get("score", 0)
-            })
-    return clean_cards
+    # Vague language lowers confidence (Amber/Red)
+    if any(word in raw_sentence.lower() for word in ['maybe', 'might', 'example', 'etc']):
+        score -= 0.30
+    
+    # Length checks (Noisy text)
+    if len(raw_sentence.split()) > 35 or len(raw_sentence.split()) < 4:
+        score -= 0.20
 
+    return round(max(0.1, min(1.0, score)), 2)
 
-# Entry: From file
+# --- FLASHCARD GENERATION ---
 def generate_flashcards_from_file(filepath):
-    """Wrapper: Extract text and generate flashcards."""
     text = extract_text_from_file(filepath)
-    if not text.strip():
-        return []
-    return generate_flashcards(text)
+    if not text.strip(): return []
+    
+    doc = nlp(text)
+    flashcards = []
+    
+    for sent in doc.sents:
+        line = sent.text.strip()
+        
+        # 1. Definition Logic (CS Focused)
+        # Matches: "Binary Search is an algorithm..."
+        match = re.search(r'^(.+?)\s+(is|are|means|refers to|is defined as)\s+(.+)', line, re.I)
+        if match:
+            q = f"What is {match.group(1).strip()}?"
+            a = match.group(3).strip()
+            conf = calculate_confidence(q, a, line)
+            flashcards.append({"question": q, "answer": a, "score": conf})
+            continue
 
+        # 2. Formula Logic (CS Math)
+        if "=" in line and any(sym in line for sym in ["+", "-", "*", "/", "^"]):
+            q = "What does this CS-related formula represent?"
+            a = line
+            flashcards.append({"question": q, "answer": a, "score": 0.85})
 
+    # Shuffle for variety
+    random.shuffle(flashcards)
+    return flashcards
 
-def is_answer_correct(user_answer: str, correct_answer: str, threshold: int = 70) -> bool:
-    """Check if user answer matches correct answer with fuzzy similarity + keywords."""
+# --- ANSWER CHECKING (Fuzzy Logic) ---
+def is_answer_correct(user_answer, correct_answer, threshold=75):
     user_answer = user_answer.lower().strip()
     correct_answer = correct_answer.lower().strip()
-
-    # Fuzzy match
+    
+    # Fuzzy match + Keyword overlap
     similarity = fuzz.ratio(user_answer, correct_answer)
     if similarity >= threshold:
         return True
-
-    # Keyword overlap (simple version)
-    correct_keywords = set(correct_answer.split())
+        
     user_keywords = set(user_answer.split())
-    overlap = len(correct_keywords & user_keywords) / max(1, len(correct_keywords))
-    if overlap > 0.5:  # e.g., >50% key terms matched
-        return True
-
+    correct_keywords = set(correct_answer.split())
+    if len(correct_keywords) > 0:
+        overlap = len(user_keywords & correct_keywords) / len(correct_keywords)
+        if overlap > 0.6: # 60% of keywords present
+            return True
+            
     return False
