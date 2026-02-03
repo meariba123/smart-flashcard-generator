@@ -1,143 +1,150 @@
-:root {
-        --primary-purple: #a478e8;
-        --soft-yellow: #fff5c3;
-        --success-green: #4CAF50;
-        --warning-amber: #FFC107;
-        --danger-red: #F44336;
-        --bg-gray: #f8f9fa;
-    }
+/* Global Background - The Purple/Yellow Wave */
+body {
+    margin: 0;
+    padding: 0;
+    background: #a478e8; 
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(263,78%,56%,1) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(48,100%,76%,1) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(263,78%,56%,1) 0, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(263,78%,56%,1) 0, transparent 50%);
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}
 
-    body {
-        background: linear-gradient(135deg, #7b2cbf 0%, #ff9e00 100%);
-        min-height: 100vh;
-        margin: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
 
-    .dashboard-wrapper {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 40px 20px;
-    }
+/* Top Navigation Pill */
+.nav-pill-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
 
-    /* Welcome Banner Section */
-    .welcome-banner {
-        text-align: center;
-        color: #2d3436;
-        margin-bottom: 40px;
-    }
+.nav-pill {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 10px 30px;
+    border-radius: 50px;
+    display: flex;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
 
-    .action-cards {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        margin-bottom: 40px;
-    }
+.nav-pill a {
+    text-decoration: none;
+    color: #5d2a9d;
+    font-weight: 600;
+    padding: 5px 15px;
+    border-radius: 20px;
+}
 
-    .info-card {
-        background: white;
-        padding: 20px;
-        border-radius: 15px;
-        flex: 1;
-        max-width: 300px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
+/* Welcome Header */
+.welcome-header {
+    text-align: center;
+    color: #3b0066;
+    margin-bottom: 40px;
+}
 
-    /* Upload Area */
-    .upload-section {
-        background: white;
-        padding: 30px;
-        border-radius: 20px;
-        margin-bottom: 50px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
+/* Action Step Cards */
+.steps-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 40px;
+}
 
-    .drop-zone {
-        border: 2px dashed var(--primary-purple);
-        border-radius: 15px;
-        padding: 40px;
-        text-align: center;
-        transition: background 0.3s;
-    }
+.step-box {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
 
-    .drop-zone.dragover { background: #f0eaff; }
+/* Main Content Grid */
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+}
 
-    /* Flashcard Grid Layout */
-    .dashboard-layout {
-        display: grid;
-        grid-template-columns: 1fr 300px;
-        gap: 30px;
-    }
+/* Flashcard Set Cards */
+.sets-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
 
-    .sets-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 20px;
-    }
+.set-card {
+    background: white;
+    border-radius: 25px;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
 
-    .set-card {
-        background: white;
-        border-radius: 20px;
-        padding: 25px;
-        text-align: center;
-        position: relative;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-    }
+.status-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+}
 
-    .set-card:hover { transform: translateY(-5px); }
+.status-green { background: #4ecb71; }
+.status-amber { background: #f4b400; }
+.status-red { background: #ea4335; }
 
-    /* Traffic Light Logic Classes */
-    .border-green { border-bottom: 10px solid var(--success-green); }
-    .border-amber { border-bottom: 10px solid var(--warning-amber); }
-    .border-red { border-bottom: 10px solid var(--danger-red); }
+.btn-study-now {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 40px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #5d2a9d;
+    font-weight: bold;
+}
 
-    .status-icon {
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        margin: 20px auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 30px;
-        color: white;
-    }
+/* Sidebar & Mastery Ring */
+.sidebar-card {
+    background: white;
+    border-radius: 25px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
 
-    .bg-green { background-color: var(--success-green); }
-    .bg-amber { background-color: var(--warning-amber); }
-    .bg-red { background-color: var(--danger-red); }
+.mastery-ring {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 20px auto;
+    border-radius: 50%;
+    background: conic-gradient(#a478e8 65%, #eee 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    /* Sidebar Progress */
-    .progress-sidebar {
-        background: white;
-        border-radius: 20px;
-        padding: 25px;
-        height: fit-content;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
+.mastery-ring::before {
+    content: "";
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    background: white;
+    border-radius: 50%;
+}
 
-    .circular-mastery {
-        width: 150px;
-        height: 150px;
-        border: 15px solid #eee;
-        border-top: 15px solid var(--primary-purple);
-        border-radius: 50%;
-        margin: 20px auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-study {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        border: 2px solid var(--primary-purple);
-        border-radius: 10px;
-        color: var(--primary-purple);
-        text-decoration: none;
-        font-weight: bold;
-        margin-top: 15px;
-    }
+.mastery-text { position: relative; text-align: center; font-weight: bold; }

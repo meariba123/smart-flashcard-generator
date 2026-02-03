@@ -1,89 +1,90 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="dashboard-wrapper">
-    <div class="welcome-banner">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+<div class="dashboard-container">
+    
+    <div class="nav-pill-container">
+        <div class="nav-pill">
+            <a href="{{ url_for('dashboard') }}" style="background: #d1b3ff;">Dashboard</a>
+            <a href="#">View Flashcards</a>
+            <a href="#">Review Flashcards</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
+
+    <div class="welcome-header">
         <h1>Welcome, {{ session.username }}! Ready to turn your notes into knowledge?</h1>
-        <div class="action-cards">
-            <div class="info-card">
+        <p>This dashboard is your central hub for creating and managing your smart flashcards.</p>
+    </div>
+
+    <div class="steps-row">
+        <div class="step-box">
+            <span style="font-size: 2rem;">📄</span>
+            <div>
                 <h3>1. Upload Notes</h3>
-                <p>Select your CS lecture files to extract key concepts.</p>
+                <p>Select your CS files (.txt, .docx, .pdf) for AI extraction.</p>
             </div>
-            <div class="info-card">
+        </div>
+        <div class="step-box">
+            <span style="font-size: 2rem;">🗂️</span>
+            <div>
                 <h3>2. View Flashcards</h3>
-                <p>Organized by AI confidence scores.</p>
+                <p>Access sets organized by AI confidence score.</p>
             </div>
-            <div class="info-card">
+        </div>
+        <div class="step-box">
+            <span style="font-size: 2rem;">🧠</span>
+            <div>
                 <h3>3. Review & Quiz</h3>
-                <p>Monitor your progress through quizzes.</p>
+                <p>Monitor your mastery via interactive quizzes.</p>
             </div>
         </div>
     </div>
 
-    <div class="upload-section">
-        <h3>Start a New Study Set</h3>
-        <form id="uploadForm" class="drop-zone">
-            <p>Drag and drop your file here, or click to browse.</p>
-            <input type="file" id="notesFile" hidden accept=".pdf,.docx,.txt">
-            <button type="button" onclick="document.getElementById('notesFile').click()" class="btn-study">Choose file</button>
-            <div id="uploadStatus"></div>
-        </form>
-    </div>
-
-    <div class="dashboard-layout">
-        <div class="sets-grid">
-            {% for set in sets %}
-            {% set score = set.avg_score | default(0.5) %}
-            <div class="set-card {% if score >= 0.8 %}border-green{% elif score >= 0.5 %}border-amber{% else %}border-red{% endif %}">
-                <h3>{{ set.name }}</h3>
-                <p>Cards: {{ set.count | default(0) }}</p>
-
-                <div class="status-icon {% if score >= 0.8 %}bg-green{% elif score >= 0.5 %}bg-amber{% else %}bg-red{% endif %}">
-                    {% if score >= 0.8 %}✓{% elif score >= 0.5 %}?{% else %}✕{% endif %}
+    <div class="main-grid">
+        <div class="sets-content">
+            <h2 style="color: #3b0066; margin-bottom: 20px;">Your Flashcard Sets</h2>
+            <div class="sets-list">
+                {% for set in sets %}
+                {% set score = set.avg_score | default(0.9) %}
+                <div class="set-card">
+                    <a href="#" style="position: absolute; top: 15px; right: 20px; color: #999; font-size: 0.8rem;">✎ Edit</a>
+                    <h3>{{ set.name }}</h3>
+                    <p>12 cards • Last studied: Today</p>
+                    
+                    <div class="status-circle {% if score >= 0.8 %}status-green{% elif score >= 0.5 %}status-amber{% else %}status-red{% endif %}">
+                        {% if score >= 0.8 %}✓{% elif score >= 0.5 %}?{% else %}✕{% endif %}
+                    </div>
+                    
+                    <strong>{% if score >= 0.8 %}High Confidence{% elif score >= 0.5 %}Medium Confidence{% else %}Low Confidence{% endif %}</strong>
+                    
+                    <a href="{{ url_for('view_set', set_id=set._id) }}" class="btn-study-now">Study Now</a>
                 </div>
-
-                <p><strong>{% if score >= 0.8 %}High Confidence{% elif score >= 0.5 %}Medium Confidence{% else %}Low Confidence{% endif %}</strong></p>
-                
-                <a href="{{ url_for('view_set', set_id=set._id) }}" class="btn-study">Study Now</a>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
 
-        <aside class="progress-sidebar">
-            <h3>Set Progress</h3>
-            <div class="circular-mastery">
-                <span style="font-size: 24px; font-weight: bold;">65%</span>
-                <span>Mastered</span>
+        <div class="sidebar">
+            <div class="sidebar-card">
+                <h3>Set Progress</h3>
+                <div class="mastery-ring">
+                    <div class="mastery-text"><span style="font-size: 1.8rem; display: block;">65%</span> Mastered</div>
+                </div>
+                <p><span class="dot status-green"></span> Mastered: 15</p>
+                <p><span class="dot status-amber"></span> Reviewing: 5</p>
+                <p><span class="dot" style="background:#ccc"></span> New: 4</p>
             </div>
-            <p><span style="color:var(--success-green)">●</span> Mastered: 15</p>
-            <p><span style="color:var(--warning-amber)">●</span> Reviewing: 5</p>
-            <p><span style="color:#ddd">●</span> New: 4</p>
-            <hr>
-            <h4>Recent Activity</h4>
-            <p><small>Completed "Psychology Quiz 1" - 85%</small></p>
-        </aside>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 25px; padding: 40px; text-align: center; margin-top: 40px; border: 2px dashed #ccc;">
+        <h3>Start a New Study Set</h3>
+        <p>Drag and drop your file here, or click to browse.</p>
+        <button onclick="document.getElementById('notesFile').click()" style="background:#5d2a9d; color:white; border:none; padding:12px 25px; border-radius:12px; cursor:pointer; font-weight:bold;">Choose file</button>
+        <input type="file" id="notesFile" style="display:none" onchange="startUpload(this.files[0])">
     </div>
 </div>
 
-<script>
-    const fileInput = document.getElementById('notesFile');
-    const uploadStatus = document.getElementById('uploadStatus');
-
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            const formData = new FormData();
-            formData.append('notes_file', fileInput.files[0]);
-            uploadStatus.innerHTML = "Processing CS notes...";
-
-            fetch('{{ url_for("upload_notes_ajax") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.redirect) window.location.href = data.redirect;
-                else uploadStatus.innerHTML = "Error: " + data.error;
-            });
-        }
-    });
-</script>
 {% endblock %}
