@@ -1,14 +1,12 @@
 {% extends "layout.html" %}
 {% block content %}
-
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
 <div class="dashboard-container">
-    
     <div class="nav-pill-container">
         <div class="nav-pill">
-            <a href="{{ url_for('dashboard') }}" style="background: #d1b3ff;">Dashboard</a>
-            <a href="#">View Flashcards</a>
+            <a href="{{ url_for('dashboard') }}" class="active">Dashboard</a>
+            <a href="{{ url_for('view_all_sets') }}">View Flashcards</a>
             <a href="#">Review Flashcards</a>
             <a href="{{ url_for('logout') }}">Logout</a>
         </div>
@@ -21,21 +19,21 @@
 
     <div class="steps-row">
         <div class="step-box">
-            <span style="font-size: 2rem;">📄</span>
+            <img src="/static/icons/file-icon.png" alt="Upload">
             <div>
                 <h3>1. Upload Notes</h3>
                 <p>Select your CS files (.txt, .docx, .pdf) for AI extraction.</p>
             </div>
         </div>
         <div class="step-box">
-            <span style="font-size: 2rem;">🗂️</span>
+            <img src="/static/icons/cards-icon.png" alt="View">
             <div>
                 <h3>2. View Flashcards</h3>
                 <p>Access sets organized by AI confidence score.</p>
             </div>
         </div>
         <div class="step-box">
-            <span style="font-size: 2rem;">🧠</span>
+            <img src="/static/icons/brain-icon.png" alt="Quiz">
             <div>
                 <h3>3. Review & Quiz</h3>
                 <p>Monitor your mastery via interactive quizzes.</p>
@@ -43,48 +41,13 @@
         </div>
     </div>
 
-    <div class="main-grid">
-        <div class="sets-content">
-            <h2 style="color: #3b0066; margin-bottom: 20px;">Your Flashcard Sets</h2>
-            <div class="sets-list">
-                {% for set in sets %}
-                {% set score = set.avg_score | default(0.9) %}
-                <div class="set-card">
-                    <a href="#" style="position: absolute; top: 15px; right: 20px; color: #999; font-size: 0.8rem;">✎ Edit</a>
-                    <h3>{{ set.name }}</h3>
-                    <p>12 cards • Last studied: Today</p>
-                    
-                    <div class="status-circle {% if score >= 0.8 %}status-green{% elif score >= 0.5 %}status-amber{% else %}status-red{% endif %}">
-                        {% if score >= 0.8 %}✓{% elif score >= 0.5 %}?{% else %}✕{% endif %}
-                    </div>
-                    
-                    <strong>{% if score >= 0.8 %}High Confidence{% elif score >= 0.5 %}Medium Confidence{% else %}Low Confidence{% endif %}</strong>
-                    
-                    <a href="{{ url_for('view_set', set_id=set._id) }}" class="btn-study-now">Study Now</a>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="sidebar">
-            <div class="sidebar-card">
-                <h3>Set Progress</h3>
-                <div class="mastery-ring">
-                    <div class="mastery-text"><span style="font-size: 1.8rem; display: block;">65%</span> Mastered</div>
-                </div>
-                <p><span class="dot status-green"></span> Mastered: 15</p>
-                <p><span class="dot status-amber"></span> Reviewing: 5</p>
-                <p><span class="dot" style="background:#ccc"></span> New: 4</p>
-            </div>
-        </div>
-    </div>
-
-    <div style="background: white; border-radius: 25px; padding: 40px; text-align: center; margin-top: 40px; border: 2px dashed #ccc;">
+    <div class="upload-area-card">
         <h3>Start a New Study Set</h3>
         <p>Drag and drop your file here, or click to browse.</p>
-        <button onclick="document.getElementById('notesFile').click()" style="background:#5d2a9d; color:white; border:none; padding:12px 25px; border-radius:12px; cursor:pointer; font-weight:bold;">Choose file</button>
-        <input type="file" id="notesFile" style="display:none" onchange="startUpload(this.files[0])">
+        <div class="drop-zone">
+            <button class="purple-btn" onclick="document.getElementById('fileInput').click()">Choose file</button>
+            <input type="file" id="fileInput" hidden onchange="uploadFile(this.files[0])">
+        </div>
     </div>
 </div>
-
 {% endblock %}
