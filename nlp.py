@@ -16,7 +16,7 @@ except:
     os.system("python -m spacy download en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
-# --- FILE EXTRACTION (Keeping your OCR & PowerPoint logic) ---
+# --- IMPROVED FILE EXTRACTION ---
 def extract_text_from_file(filepath):
     ext = os.path.splitext(filepath)[1].lower()
     text = ""
@@ -34,7 +34,18 @@ def extract_text_from_file(filepath):
             text = pytesseract.image_to_string(Image.open(filepath))
         elif ext == ".pptx":
             prs = Presentation(filepath)
-            text = "\n".join([shape.text for slide in prs.slides for shape in slide.shapes if hasattr(shape, "text")])
+            full_text = []
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    # Improved check for text in shapes and tables
+                    if hasattr(shape, "text") and shape.text.strip():
+                        full_text.append(shape.text)
+                    elif shape.has_table:
+                        for row in shape.table.rows:
+                            for cell in row.cells:
+                                if cell.text.strip():
+                                    full_text.append(cell.text)
+            text = "\n".join(full_text)
     except Exception as e:
         print(f"Error extracting text: {e}")
     return text
@@ -42,60 +53,72 @@ def extract_text_from_file(filepath):
 # --- CS-SPECIFIC SCORING (For Traffic Lights) ---
 def calculate_confidence(question, answer, raw_sentence):
     """Assigns 0.0 to 1.0 for the Traffic Light system."""
-    score = 0.90 # Start high (Green)
+    score = 0.85 # Standard start
     
-    # CS Keywords boost confidence
-    cs_terms = ['algorithm', 'variable', 'function', 'class', 'complexity', 'data structure', 'binary']
+    cs_terms = ['algorithm', 'variable', 'function', 'class', 'complexity', 'data structure', 'binary', 'complexity']
     if any(term in raw_sentence.lower() for term in cs_terms):
-        score += 0.05
+        score += 0.10
 
-    # Vague language lowers confidence (Amber/Red)
     if any(word in raw_sentence.lower() for word in ['maybe', 'might', 'example', 'etc']):
         score -= 0.30
     
-    # Length checks (Noisy text)
-    if len(raw_sentence.split()) > 35 or len(raw_sentence.split()) < 4:
+    if len(raw_sentence.split()) > 40 or len(raw_sentence.split()) < 3:
         score -= 0.20
 
     return round(max(0.1, min(1.0, score)), 2)
 
-# --- FLASHCARD GENERATION ---
+# --- IMPROVED FLASHCARD GENERATION ---
 def generate_flashcards_from_file(filepath):
     text = extract_text_from_file(filepath)
-    if not text.strip(): return []
+    if not text.strip(): 
+        return []
     
     doc = nlp(text)
     flashcards = []
     
-    for sent in doc.sents:
-        line = sent.text.strip()
-        
-        # 1. Definition Logic (CS Focused)
-        # Matches: "Binary Search is an algorithm..."
+    # Process by lines first to catch slide bullet points
+    lines = text.split('\n')
+    
+    for line in lines:
+        line = line.strip()
+        if not line: continue
+
+        # 1. PPTX Bullet Point Logic (Term: Definition)
+        if ":" in line and len(line.split(":")[0].split()) <= 5:
+            parts = line.split(":", 1)
+            q = f"What is {parts[0].strip()}?"
+            a = parts[1].strip()
+            if len(a) > 3:
+                flashcards.append({"question": q, "answer": a, "score": 0.80})
+                continue
+
+        # 2. Definition Logic (Sentence Based)
         match = re.search(r'^(.+?)\s+(is|are|means|refers to|is defined as)\s+(.+)', line, re.I)
         if match:
-            q = f"What is {match.group(1).strip()}?"
-            a = match.group(3).strip()
-            conf = calculate_confidence(q, a, line)
-            flashcards.append({"question": q, "answer": a, "score": conf})
-            continue
+            term = match.group(1).strip()
+            definition = match.group(3).strip()
+            if len(term.split()) <= 6: # Ensure the "What is..." part isn't a whole paragraph
+                q = f"What is {term}?"
+                a = definition
+                conf = calculate_confidence(q, a, line)
+                flashcards.append({"question": q, "answer": a, "score": conf})
 
-        # 2. Formula Logic (CS Math)
-        if "=" in line and any(sym in line for sym in ["+", "-", "*", "/", "^"]):
-            q = "What does this CS-related formula represent?"
-            a = line
-            flashcards.append({"question": q, "answer": a, "score": 0.85})
+    # 3. CS Formula Logic
+    if "=" in text:
+        formula_matches = re.findall(r'([A-Za-z0-9_]+\s*=\s*[^.\n]+)', text)
+        for f in formula_matches:
+            if any(op in f for op in ["+", "-", "*", "/", "^"]):
+                flashcards.append({"question": "Explain this formula/expression:", "answer": f.strip(), "score": 0.90})
 
     # Shuffle for variety
     random.shuffle(flashcards)
     return flashcards
 
-# --- ANSWER CHECKING (Fuzzy Logic) ---
+# --- ANSWER CHECKING ---
 def is_answer_correct(user_answer, correct_answer, threshold=75):
     user_answer = user_answer.lower().strip()
     correct_answer = correct_answer.lower().strip()
     
-    # Fuzzy match + Keyword overlap
     similarity = fuzz.ratio(user_answer, correct_answer)
     if similarity >= threshold:
         return True
@@ -104,7 +127,7 @@ def is_answer_correct(user_answer, correct_answer, threshold=75):
     correct_keywords = set(correct_answer.split())
     if len(correct_keywords) > 0:
         overlap = len(user_keywords & correct_keywords) / len(correct_keywords)
-        if overlap > 0.6: # 60% of keywords present
+        if overlap > 0.6: 
             return True
             
     return False
