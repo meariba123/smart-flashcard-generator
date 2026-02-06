@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+<div class="dashboard-container">
+
+```
+<div class="nav-pill-container">
+    <div class="nav-pill">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('view_sets') }}" class="active">View Flashcards</a>
+        <a href="{{ url_for('choose_review') }}">Review Flashcards</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</div>
+
+<h2 class="section-title">Your Flashcard Sets</h2>
+
+<div class="sets-list">
+    {% for set in sets %}
+    <div class="set-card">
+
+        <h3>{{ set.name }}</h3>
+        <p>{{ set.count }} cards</p>
+
+        <div class="status-indicator 
+            {% if set.avg_score >= 0.8 %}green
+            {% elif set.avg_score >= 0.5 %}amber
+            {% else %}red{% endif %}">
+        </div>
+
+        <p class="conf-text">
+            {% if set.avg_score >= 0.8 %}
+                High Confidence
+            {% elif set.avg_score >= 0.5 %}
+                Medium Confidence
+            {% else %}
+                Needs Review
+            {% endif %}
+        </p>
+
+        <a href="{{ url_for('view_set', set_id=set._id) }}" class="btn-study-now">
+            Open Set
+        </a>
+
+    </div>
+    {% endfor %}
+</div>
+```
+
+</div>
+{% endblock %}

@@ -136,9 +136,19 @@ def create_flashcard():
 # ------------------ View Flashcard Set ------------------
 @app.route('/set/<set_id>')
 def view_set(set_id):
+
     cards = list(flashcards.find({'set_id': ObjectId(set_id)}))
     set_data = flashcardsets.find_one({'_id': ObjectId(set_id)})
-    return render_template('view_set.html', set_data=set_data, flashcards=cards)
+
+    set_data['_id'] = str(set_data['_id'])
+
+    for c in cards:
+        c['_id'] = str(c['_id'])
+
+    return render_template('view_set.html',
+                           set_data=set_data,
+                           flashcards=cards)
+
 
 
 # ------------------ Upload Notes (AJAX) ------------------
@@ -209,7 +219,7 @@ def view_sets():
         else:
             s['avg_score'] = 0
 
-    return render_template('view_set.html', sets=sets)
+    return render_template('view_sets.html', sets=sets)
 
 
 # ------------------ Preview Generated Flashcards ------------------

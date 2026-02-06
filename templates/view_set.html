@@ -1,56 +1,42 @@
 {% extends "layout.html" %}
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
-<div class="dashboard-container">
-    <div class="nav-pill-container">
-        <div class="nav-pill">
-            <a href="{{ url_for('dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('view_sets') }}" class="active">View Flashcards</a>
-            <a href="#">Review Flashcards</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
-        </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/view_set.css') }}">
+
+<div class="set-container">
+
+```
+<div class="top-bar">
+    <h2>{{ set_data.name }}</h2>
+
+    <div class="actions">
+        <a href="{{ url_for('create_flashcard') }}" class="btn-add">
+            + Add Card
+        </a>
+
+        <a href="{{ url_for('review_flashcards', set_id=set_data._id) }}" class="btn-review">
+            Start Review
+        </a>
     </div>
+</div>
 
-    <h2 class="section-title">Your Flashcard Sets</h2>
 
-    <div class="main-grid">
-        <div class="sets-list">
-            {% for set in sets %}
-            <div class="set-card">
-                <span class="edit-icon">✎ Edit</span>
-                <h3>{{ set.name }}</h3>
-                <p>{{ set.count }} cards • Last studied: Today</p>
-                
-                <div class="status-indicator {% if set.avg_score >= 0.8 %}green{% elif set.avg_score >= 0.5 %}amber{% else %}red{% endif %}">
-                    {% if set.avg_score >= 0.8 %}✓{% elif set.avg_score >= 0.5 %}?{% else %}✕{% endif %}
-                </div>
-                
-                <p class="conf-text">High Confidence</p>
-               <a href="{{ url_for('view_set', set_id=set._id) }}" class="btn-study-now">Study Now</a>
-            </div>
-            {% endfor %}
+<div class="cards-grid">
+    {% for card in flashcards %}
+    <div class="flashcard">
+
+        <div class="question">
+            {{ card.question }}
         </div>
 
-        <div class="progress-sidebar">
-            <div class="sidebar-card">
-                <h3>Set Progress</h3>
-                <div class="mastery-circle">
-                    <div class="circle-inner">
-                        <span class="percent">65%</span>
-                        <span class="label">Mastered</span>
-                    </div>
-                </div>
-                <ul class="stats-list">
-                    <li><span class="dot green"></span> Mastered: 15</li>
-                    <li><span class="dot amber"></span> Reviewing: 5</li>
-                    <li><span class="dot gray"></span> New: 4</li>
-                </ul>
-                <hr>
-                <h4>Recent Activity</h4>
-                <p class="recent-text">Completed "CS Quiz 1" - 85%</p>
-            </div>
+        <div class="answer">
+            {{ card.answer }}
         </div>
+
     </div>
+    {% endfor %}
+</div>
+```
+
 </div>
 {% endblock %}
