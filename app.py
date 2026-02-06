@@ -209,7 +209,7 @@ def view_sets():
         else:
             s['avg_score'] = 0
 
-    return render_template('view_sets.html', sets=sets)
+    return render_template('view_set.html', sets=sets)
 
 
 # ------------------ Preview Generated Flashcards ------------------
