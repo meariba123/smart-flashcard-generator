@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
 <div class="dashboard-container">
     <div class="nav-pill-container">
         <div class="nav-pill">
@@ -55,5 +56,5 @@
 <script>
     const UPLOAD_URL = "{{ url_for('upload_notes_ajax') }}";
 </script>
-<script src="{{ url_for('static', filename='static/js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
