@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-<script defer src="static/js/dashboard.js"></script>
 <div class="dashboard-container">
     <div class="nav-pill-container">
         <div class="nav-pill">
@@ -53,4 +52,8 @@
         <b>Processing your notes... please wait.</b>
     </div>
 </div>
+<script>
+    const UPLOAD_URL = "{{ url_for('upload_notes_ajax') }}";
+</script>
+<script src="{{ url_for('static', filename='static/js/dashboard.js') }}"></script>
 {% endblock %}
