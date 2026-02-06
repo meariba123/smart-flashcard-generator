@@ -182,6 +182,16 @@ def review_temp():
         temp_mode=True
     )
 
+@app.route('/view_sets')
+def view_sets():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = ObjectId(session['user_id'])
+    sets = list(flashcardsets.find({'user_id': user_id}))
+
+    return render_template('view_set.html', sets=sets)
+
 
 # ------------------ Preview Generated Flashcards ------------------
 @app.route('/preview-generated/<filename>')
