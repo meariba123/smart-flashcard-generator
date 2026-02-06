@@ -16,6 +16,12 @@ except:
     os.system("python -m spacy download en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
+# Add common words that shouldn't be flashcard titles
+JUNK_WORDS = {
+    'this', 'that', 'it', 'they', 'there', 'what', 'which', 'who', 
+    'e.g.', 'i.e.', 'etc', 'example', 'when', 'where', 'how'
+}
+
 # --- IMPROVED FILE EXTRACTION ---
 def extract_text_from_file(filepath):
     ext = os.path.splitext(filepath)[1].lower()
@@ -76,43 +82,58 @@ def generate_flashcards_from_file(filepath):
     doc = nlp(text)
     flashcards = []
     
-    # Process by lines first to catch slide bullet points
-    lines = text.split('\n')
-    
-    for line in lines:
-        line = line.strip()
-        if not line: continue
+    # Process by sentences for better NLP context
+    for sent in doc.sents:
+        line = sent.text.strip()
+        if not line or len(line.split()) < 4: continue
 
-        # 1. PPTX Bullet Point Logic (Term: Definition)
-        if ":" in line and len(line.split(":")[0].split()) <= 5:
-            parts = line.split(":", 1)
-            q = f"What is {parts[0].strip()}?"
-            a = parts[1].strip()
-            if len(a) > 3:
-                flashcards.append({"question": q, "answer": a, "score": 0.80})
-                continue
-
-        # 2. Definition Logic (Sentence Based)
+        # 1. Improved Definition Logic (Sentence Based)
+        # We look for: [Term] is/are [Definition]
         match = re.search(r'^(.+?)\s+(is|are|means|refers to|is defined as)\s+(.+)', line, re.I)
         if match:
             term = match.group(1).strip()
             definition = match.group(3).strip()
-            if len(term.split()) <= 6: # Ensure the "What is..." part isn't a whole paragraph
+            
+            # NLP CLEANING: Check if the term is junk or too long
+            term_lower = term.lower()
+            
+            # Rule A: Ignore if the term is in our JUNK_WORDS list
+            if term_lower in JUNK_WORDS or any(word in JUNK_WORDS for word in term_lower.split()):
+                continue
+                
+            # Rule B: Use spaCy to ensure the term contains a Noun or Proper Noun
+            term_doc = nlp(term)
+            has_noun = any(token.pos_ in ['NOUN', 'PROPN'] for token in term_doc)
+            
+            if has_noun and len(term.split()) <= 5: 
                 q = f"What is {term}?"
                 a = definition
                 conf = calculate_confidence(q, a, line)
                 flashcards.append({"question": q, "answer": a, "score": conf})
+                continue
 
-    # 3. CS Formula Logic
+        # 2. PPTX Bullet Point Logic (Term: Definition)
+        if ":" in line:
+            parts = line.split(":", 1)
+            term = parts[0].strip()
+            if term.lower() not in JUNK_WORDS and 1 <= len(term.split()) <= 4:
+                q = f"What is {term}?"
+                a = parts[1].strip()
+                if len(a) > 5:
+                    flashcards.append({"question": q, "answer": a, "score": 0.80})
+
+    # 3. CS Formula Logic (Keep your existing math logic)
     if "=" in text:
         formula_matches = re.findall(r'([A-Za-z0-9_]+\s*=\s*[^.\n]+)', text)
         for f in formula_matches:
             if any(op in f for op in ["+", "-", "*", "/", "^"]):
                 flashcards.append({"question": "Explain this formula/expression:", "answer": f.strip(), "score": 0.90})
 
-    # Shuffle for variety
-    random.shuffle(flashcards)
-    return flashcards
+    # Remove duplicates and shuffle
+    unique_cards = {c['question']: c for c in flashcards}.values()
+    final_list = list(unique_cards)
+    random.shuffle(final_list)
+    return final_list
 
 # --- ANSWER CHECKING ---
 def is_answer_correct(user_answer, correct_answer, threshold=75):
