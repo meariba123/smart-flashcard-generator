@@ -23,20 +23,26 @@
 
 <div class="cards-grid">
     {% for card in flashcards %}
-    <div class="flashcard">
+    
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
 
-        <div class="question">
-            {{ card.question }}
+            <div class="flip-front">
+                <p>{{ card.question }}</p>
+                <span class="tap-hint">Tap to reveal</span>
+            </div>
+
+            <div class="flip-back">
+                <p>{{ card.answer }}</p>
+            </div>
+
         </div>
-
-        <div class="answer">
-            {{ card.answer }}
-        </div>
-
     </div>
+
     {% endfor %}
 </div>
 ```
 
 </div>
+
 {% endblock %}
