@@ -190,7 +190,26 @@ def view_sets():
     user_id = ObjectId(session['user_id'])
     sets = list(flashcardsets.find({'user_id': user_id}))
 
-    return render_template('view_set.html', sets=sets)
+    for s in sets:
+
+        # convert ObjectId once
+        set_object_id = s['_id']
+        s['_id'] = str(set_object_id)
+
+        # ✅ card count
+        cards = list(flashcards.find({'set_id': set_object_id}))
+        s['count'] = len(cards)
+
+        # ✅ REAL progress calculation (PUT IT HERE)
+        prog = list(progress.find({'set_id': set_object_id}))
+
+        if prog:
+            avg = sum(p.get('score', 0) for p in prog) / len(prog)
+            s['avg_score'] = avg
+        else:
+            s['avg_score'] = 0
+
+    return render_template('view_sets.html', sets=sets)
 
 
 # ------------------ Preview Generated Flashcards ------------------
