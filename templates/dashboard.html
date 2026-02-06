@@ -41,13 +41,10 @@
         </div>
     </div>
 
-    <div class="upload-area-card">
-        <h3>Start a New Study Set</h3>
-        <p>Drag and drop your file here, or click to browse.</p>
-        <div class="drop-zone">
-            <button class="purple-btn" onclick="document.getElementById('fileInput').click()">Choose file</button>
-            <input type="file" id="fileInput" hidden onchange="uploadFile(this.files[0])">
-        </div>
-    </div>
+<div class="upload-box"> <h3>Start a New Study Set</h3> 
+    <p>Drag and drop your file here, or click to browse.</p> 
+    <input type="file" name="notes_file" id="fileInput" hidden > 
+    <button type="button" onclick="document.getElementById('fileInput').click()"> Choose file </button> 
+    <span id="fileName"></span> </div>
 </div>
 {% endblock %}
