@@ -154,28 +154,39 @@ def view_set(set_id):
 # ------------------ Upload Notes (AJAX) ------------------
 @app.route('/upload_notes_ajax', methods=['POST'])
 def upload_notes_ajax():
-    if 'notes_file' not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
+    try:
+        if 'notes_file' not in request.files:
+            return jsonify({"ok": False, "error": "No file uploaded"}), 400
 
-    file = request.files['notes_file']
-    if file.filename == '':
-        return jsonify({"error": "No file selected"}), 400
+        file = request.files['notes_file']
+        if file.filename == '':
+            return jsonify({"ok": False, "error": "No file selected"}), 400
 
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
 
-    # Generate flashcards via NLP
-    flashcards_generated = generate_flashcards_from_file(filepath)
+            # Generate flashcards via NLP
+            flashcards_generated = generate_flashcards_from_file(filepath)
 
-    # Store temporarily in session
-    session['temp_generated'] = [
-        {"question": c.get("question",""), "answer": c.get("answer",""), "score": c.get("score", 0)}
-        for c in flashcards_generated
-    ]
-    session['temp_filename'] = filename
+            if not flashcards_generated:
+                return jsonify({"ok": False, "error": "AI could not find enough text in this file to make cards."}), 200
 
-    return jsonify({"ok": True, "redirect": url_for('review_temp')})
+            # Store in session
+            session['temp_generated'] = [
+                {"question": c.get("question",""), "answer": c.get("answer",""), "score": c.get("score", 0)}
+                for c in flashcards_generated
+            ]
+            session['temp_filename'] = filename
+
+            return jsonify({"ok": True, "redirect": url_for('review_temp')})
+        
+        return jsonify({"ok": False, "error": "File type not allowed"}), 400
+
+    except Exception as e:
+        print(f"Server Error: {str(e)}") # This shows up in your terminal
+        return jsonify({"ok": False, "error": "Internal Server Error. Check terminal."}), 500
 
 @app.route('/review-temp')
 def review_temp():
