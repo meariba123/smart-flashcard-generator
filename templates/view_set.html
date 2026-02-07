@@ -62,8 +62,12 @@
     {% if flashcards|length > 0 %}
     <div class="review-progress">
         <div class="progress-bar">
+            {% set progress_percentage = (flashcards|length / 10 * 100) %}
+            {% if progress_percentage > 100 %}
+                {% set progress_percentage = 100 %}
+            {% endif %}
             <div class="progress-fill" id="progress-fill" 
-                 style="width: {{ (flashcards|length / 10 * 100)|min(100) }}%"></div>
+                 style="width: {{ progress_percentage }}%"></div>
         </div>
         <div class="progress-text">
             {% if flashcards|length >= 5 %}
@@ -97,12 +101,15 @@
                 </div>
             </div>
             
-            <div class="question">
-                {{ card.question }}
-            </div>
+            <!-- FIXED: Added flashcard-content wrapper for proper flip -->
+            <div class="flashcard-content">
+                <div class="question">
+                    {{ card.question }}
+                </div>
 
-            <div class="answer">
-                {{ card.answer }}
+                <div class="answer">
+                    {{ card.answer }}
+                </div>
             </div>
 
             <!-- Card footer with tags if available -->

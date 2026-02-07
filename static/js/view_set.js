@@ -17,8 +17,8 @@ function initFlashcardInteractions() {
     flashcards.forEach(card => {
         // Add click effect to flip cards
         card.addEventListener('click', function(e) {
-            // Don't trigger if clicking on buttons
-            if (!e.target.closest('.card-btn')) {
+            // Don't trigger if clicking on buttons or header
+            if (!e.target.closest('.card-btn') && !e.target.closest('.card-header')) {
                 toggleCardFlip(this);
             }
         });
@@ -33,14 +33,19 @@ function initFlashcardInteractions() {
             btn.addEventListener('mouseleave', function() {
                 this.style.transform = 'scale(1)';
             });
-            
-            // Add click handlers for edit/delete buttons
-            if (this.classList.contains('edit-btn')) {
-                btn.addEventListener('click', handleEditCard);
-            } else if (this.classList.contains('delete-btn')) {
-                btn.addEventListener('click', handleDeleteCard);
-            }
         });
+        
+        // Add click handlers for edit/delete buttons
+        const editBtn = card.querySelector('.edit-btn');
+        const deleteBtn = card.querySelector('.delete-btn');
+        
+        if (editBtn) {
+            editBtn.addEventListener('click', handleEditCard);
+        }
+        
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', handleDeleteCard);
+        }
     });
 }
 
@@ -140,6 +145,8 @@ function handleEditCard(e) {
     e.stopPropagation(); // Prevent card flip
     const cardId = this.getAttribute('data-card-id');
     
+    console.log(`Edit button clicked for card ID: ${cardId}`);
+    
     // Show confirmation and redirect to edit page
     if (confirm('Edit this flashcard?')) {
         // In a real app, this would redirect to the edit page
@@ -147,7 +154,7 @@ function handleEditCard(e) {
         console.log(`Editing card with ID: ${cardId}`);
         
         // For demo purposes, show a message
-        showNotification('Edit functionality would open here', 'info');
+        showNotification(`Editing card ${cardId}`, 'info');
     }
 }
 
@@ -159,6 +166,8 @@ function handleDeleteCard(e) {
     e.stopPropagation(); // Prevent card flip
     const cardId = this.getAttribute('data-card-id');
     const cardElement = this.closest('.flashcard');
+    
+    console.log(`Delete button clicked for card ID: ${cardId}`);
     
     // Show confirmation dialog
     if (confirm('Are you sure you want to delete this flashcard?')) {
@@ -190,8 +199,7 @@ function handleDeleteCard(e) {
  * Handle edit set button click
  */
 function handleEditSet() {
-    // In a real app, this would redirect to the set edit page
-    console.log('Edit set clicked');
+    console.log('Edit set button clicked');
     showNotification('Set edit functionality would open here', 'info');
 }
 
@@ -199,6 +207,8 @@ function handleEditSet() {
  * Handle share set button click
  */
 function handleShareSet() {
+    console.log('Share set button clicked');
+    
     // Check if Web Share API is available
     if (navigator.share) {
         navigator.share({
@@ -252,9 +262,9 @@ function updateStats() {
     const totalCards = cards.length;
     
     // Update total cards in stats footer
-    const statValue = document.querySelector('.stat-value');
-    if (statValue) {
-        statValue.textContent = totalCards;
+    const statValues = document.querySelectorAll('.stat-value');
+    if (statValues.length > 0) {
+        statValues[0].textContent = totalCards;
     }
     
     // Update review ready status
@@ -375,14 +385,4 @@ function showNotification(message, type = 'info') {
         `;
         document.head.appendChild(style);
     }
-}
-
-// Export functions for potential module use
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        toggleCardFlip,
-        handleEditCard,
-        handleDeleteCard,
-        showNotification
-    };
 }
