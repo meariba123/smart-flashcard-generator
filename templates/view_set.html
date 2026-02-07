@@ -4,45 +4,47 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/view_set.css') }}">
 
 <div class="set-container">
-
-```
-<div class="top-bar">
-    <h2>{{ set_data.name }}</h2>
-
-    <div class="actions">
-        <a href="{{ url_for('create_flashcard') }}" class="btn-add">
-            + Add Card
-        </a>
-
-        <a href="{{ url_for('review_flashcards', set_id=set_data._id) }}" class="btn-review">
-            Start Review
-        </a>
-    </div>
-</div>
-
-
-<div class="cards-grid">
-    {% for card in flashcards %}
+    <a href="{{ url_for('dashboard') }}" class="back-link">← Back to Dashboard</a>
     
-    <div class="flip-card" onclick="this.classList.toggle('flipped')">
-        <div class="flip-inner">
+    <div class="top-bar">
+        <div class="title-section">
+            <span class="set-count">{{ flashcards|length }} Cards</span>
+            <h2>{{ set_data.name }}</h2>
+        </div>
 
-            <div class="flip-front">
-                <p>{{ card.question }}</p>
-                <span class="tap-hint">Tap to reveal</span>
-            </div>
-
-            <div class="flip-back">
-                <p>{{ card.answer }}</p>
-            </div>
-
+        <div class="actions">
+            <a href="{{ url_for('create_flashcard') }}" class="btn-add">
+                <span>+</span> Add Card
+            </a>
+            <a href="{{ url_for('review_flashcards', set_id=set_data._id) }}" class="btn-review">
+                Play Deck
+            </a>
         </div>
     </div>
 
-    {% endfor %}
-</div>
-```
+    <div class="cards-grid">
+        {% for card in flashcards %}
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+            <div class="flip-inner">
+                <div class="flip-front">
+                    <div class="card-glass-effect"></div>
+                    <div class="card-content">
+                        <p>{{ card.question }}</p>
+                        <div class="tap-hint">
+                            <span class="icon">👆</span> Tap to flip
+                        </div>
+                    </div>
+                </div>
 
+                <div class="flip-back">
+                    <div class="card-content">
+                        <p>{{ card.answer }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 
 {% endblock %}
