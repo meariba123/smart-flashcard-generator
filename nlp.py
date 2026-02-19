@@ -9,30 +9,30 @@ from PIL import Image
 import pytesseract
 from rapidfuzz import fuzz
 
-# Load spaCy
+#load spaCy
 try:
     nlp = spacy.load("en_core_web_sm")
 except:
     os.system("python -m spacy download en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
-# --- REFINED JUNK LIST ---
+#refined junk list
 EXACT_JUNK = {'this', 'that', 'it', 'they', 'there', 'what', 'which', 'who', 'example', 'examples'}
 PREFIX_JUNK = r'^(e\.g\.|i\.e\.|etc|example:|note:)\s+'
 
 def clean_term(term):
-    """Cleans prefixes like 'e.g.' from the start of questions."""
+    #Cleans prefixes like 'e.g.' from the start of questions
     term = re.sub(PREFIX_JUNK, '', term, flags=re.IGNORECASE)
     return term.strip().capitalize()
 
 def clean_text(text):
-    """Removes slide junk like URLs and common filler."""
+    #Removes slide junk like URLs and common filler
     text = re.sub(r'https?://\S+', '', text) 
     text = re.sub(r'\(.*?\)', '', text)      
     text = text.replace(' - ', ' ').replace(' : ', ' ')
     return text.strip()
 
-# --- FILE EXTRACTION ---
+#file extraction
 def extract_text_from_file(filepath):
     ext = os.path.splitext(filepath)[1].lower()
     text = ""
