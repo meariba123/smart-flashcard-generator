@@ -32,39 +32,43 @@
         </div>
     </header>
 
-    <div class="modern-grid">
-        {% for card in flashcards %}
-        <div class="interactive-card" onclick="this.classList.toggle('flipped')">
-            <div class="card-inner">
-                
-                <div class="card-front">
-                    <div class="card-top">
-                        <span class="card-id">Concept #{{ loop.index }}</span>
-                        <div class="conf-indicator {% if card.get('score', 0) >= 0.8 %}high{% elif card.get('score', 0) >= 0.6 %}med{% else %}low{% endif %}">
-                            <span class="dot"></span> {{ (card.get('score', 0) * 100)|int }}% AI Confidence
-                        </div>
+<div class="modern-grid">
+    {% for card in flashcards %}
+    <div class="interactive-card" onclick="this.classList.toggle('flipped')">
+        <div class="card-inner">
+            
+            <div class="card-front">
+                <div class="card-top">
+                    <span class="card-id">Concept #{{ loop.index }}</span>
+                    {% set score = card.get('score', 0.7) %} {# Default to 70% for existing cards if you like #}
+                    <div class="conf-indicator {% if score >= 0.8 %}high{% elif score >= 0.6 %}med{% else %}low{% endif %}">
+                        <span class="dot"></span> {{ (score * 100)|int }}% AI Confidence
                     </div>
-                    <h3 class="question-display">{{ card.question }}</h3>
-                    <div class="click-prompt">Click to reveal technical definition</div>
                 </div>
-
-                <div class="card-back">
-                    <div class="answer-wrapper">
-                        <p class="answer-text">{{ card.answer }}</p>
-                        
-                        {% if card.image_url %}
-                        <div class="ai-visual">
-                            <img src="{{ card.image_url }}" alt="AI Visual Aid">
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-footer-tag">Verified CS Context</div>
-                </div>
-
+                <h3 class="question-display">{{ card.question }}</h3>
+                <div class="click-prompt">Click to reveal technical definition</div>
             </div>
+
+            <div class="card-back">
+                <div class="answer-wrapper">
+                    <p class="answer-text">{{ card.answer }}</p>
+                    
+                    {% if card.get('image_url') %}
+                    <div class="ai-visual">
+                        <img src="{{ card.image_url }}" alt="AI Visual Aid">
+                    </div>
+                    {% else %}
+                    <div class="ai-visual-placeholder">
+                        <span>No AI Visual available for this concept</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer-tag">Verified CS Context</div>
+            </div>
+
         </div>
-        {% endfor %}
     </div>
+    {% endfor %}
 </div>
 
 <script src="{{ url_for('static', filename='js/view_set.js') }}"></script>
