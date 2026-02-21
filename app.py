@@ -171,11 +171,16 @@ def upload_notes_ajax():
             flashcards_generated = generate_flashcards_from_file(filepath)
 
             if not flashcards_generated:
-                return jsonify({"ok": False, "error": "AI could not find enough text in this file to make cards."}), 200
+                return jsonify({"ok": False, "error": "AI could not find enough text."}), 200
 
-            # Store in session
+            # UPDATED: Store image_url and score in session
             session['temp_generated'] = [
-                {"question": c.get("question",""), "answer": c.get("answer",""), "score": c.get("score", 0)}
+                {
+                    "question": c.get("question",""), 
+                    "answer": c.get("answer",""), 
+                    "score": c.get("score", 0),
+                    "image_url": c.get("image_url") # ADDED THIS
+                }
                 for c in flashcards_generated
             ]
             session['temp_filename'] = filename
@@ -185,8 +190,8 @@ def upload_notes_ajax():
         return jsonify({"ok": False, "error": "File type not allowed"}), 400
 
     except Exception as e:
-        print(f"Server Error: {str(e)}") # This shows up in your terminal
-        return jsonify({"ok": False, "error": "Internal Server Error. Check terminal."}), 500
+        print(f"Server Error: {str(e)}")
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 @app.route('/review-temp')
 def review_temp():

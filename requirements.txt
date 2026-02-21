@@ -1,4 +1,12 @@
 flask
-pymongo
 flask-bcrypt
+pymongo
 python-dotenv
+openai
+spacy
+python-docx
+PyPDF2
+python-pptx
+Pillow
+pytesseract
+rapidfuzz

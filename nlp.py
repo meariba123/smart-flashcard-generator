@@ -9,6 +9,11 @@ from PIL import Image
 import pytesseract
 from rapidfuzz import fuzz
 from openai import OpenAI  # Added for Image Generation
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+
 
 # Load spaCy
 try:
@@ -18,7 +23,7 @@ except:
     nlp = spacy.load("en_core_web_sm")
 
 # Initialize OpenAI Client (Ensure your API key is in your Environment Variables)
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 EXACT_JUNK = {'this', 'that', 'it', 'they', 'there', 'what', 'which', 'who', 'example', 'examples'}
 PREFIX_JUNK = r'^(e\.g\.|i\.e\.|etc|example:|note:)\s+'
