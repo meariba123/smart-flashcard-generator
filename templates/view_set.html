@@ -40,8 +40,8 @@
                 <div class="card-front">
                     <div class="card-top">
                         <span class="card-id">Concept #{{ loop.index }}</span>
-                        <div class="conf-indicator {% if card.score >= 0.8 %}high{% elif card.score >= 0.6 %}med{% else %}low{% endif %}">
-                            <span class="dot"></span> {{ (card.score * 100)|int }}% AI Confidence
+                        <div class="conf-indicator {% if card.get('score', 0) >= 0.8 %}high{% elif card.get('score', 0) >= 0.6 %}med{% else %}low{% endif %}">
+                            <span class="dot"></span> {{ (card.get('score', 0) * 100)|int }}% AI Confidence
                         </div>
                     </div>
                     <h3 class="question-display">{{ card.question }}</h3>
