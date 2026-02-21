@@ -241,17 +241,19 @@ def preview_generated_flashcards(filename):
     return render_template('preview_generated.html', flashcards=generated)
 
 
-# ------------------ Save Generated Flashcards ------------------
+# ------------------ Save Generated Flashcards (Updated) ------------------
 @app.route('/save-generated-flashcards', methods=['POST'])
 def save_generated_flashcards():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
     user_id = ObjectId(session['user_id'])
-    questions = request.form.getlist('questions')
-    answers = request.form.getlist('answers')
     set_name = request.form.get('set_name')
+    
+    # Retrieve the temp data from session
+    temp_cards = session.get('temp_generated', [])
 
+    # 1. Handle Set Creation/Retrieval
     existing_set = flashcardsets.find_one({'user_id': user_id, 'name': set_name})
     if existing_set:
         set_id = existing_set['_id']
@@ -262,20 +264,23 @@ def save_generated_flashcards():
             'created_at': datetime.utcnow()
         }).inserted_id
 
-    for q, a in zip(questions, answers):
+    # 2. Save Cards with Images and Confidence Scores
+    for card in temp_cards:
         flashcards.insert_one({
             'user_id': user_id,
             'set_id': set_id,
-            'question': q,
-            'answer': a,
+            'question': card.get('question'),
+            'answer': card.get('answer'),
+            'image_url': card.get('image_url'), # NEW: Save DALL-E link
+            'score': card.get('score', 0),       # NEW: Save Confidence score
             'created_at': datetime.utcnow()
         })
 
     session.pop('temp_generated', None)
     session.pop('temp_filename', None)
 
-    flash('Flashcards saved successfully!', 'success')
-    return redirect(url_for('dashboard'))
+    flash('Dissertation-ready set saved successfully!', 'success')
+    return redirect(url_for('view_set', set_id=str(set_id)))
 
 
 # ------------------ Review Flashcards ------------------
