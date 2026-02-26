@@ -5,6 +5,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <div class="glass-container">
+
     <header class="set-header">
         <div class="header-main">
             <div class="badge">Study Set</div>
@@ -18,58 +19,91 @@
                 <span class="stat-label">Concepts</span>
             </div>
             <div class="stat-box">
-                <span class="stat-num">{% if flashcards|length > 0 %}{{ (flashcards|length * 0.8)|int }}{% else %}0{% endif %}</span>
+                <span class="stat-num">
+                    {% if flashcards|length > 0 %}
+                        {{ (flashcards|length * 0.8)|int }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </span>
                 <span class="stat-label">Min Study</span>
             </div>
         </div>
 
         <div class="header-actions">
             <a href="{{ url_for('review_flashcards', set_id=set_data._id) }}" class="btn-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
                 Start Smart Review
             </a>
             <a href="{{ url_for('create_flashcard') }}" class="btn-secondary">+ Add Manual</a>
         </div>
     </header>
 
-<div class="modern-grid">
-    {% for card in flashcards %}
-    <div class="interactive-card" onclick="this.classList.toggle('flipped')">
-        <div class="card-inner">
-            
-            <div class="card-front">
-                <div class="card-top">
-                    <span class="card-id">Concept #{{ loop.index }}</span>
-                    {% set score = card.get('score', 0.7) %} {# Default to 70% for existing cards if you like #}
-                    <div class="conf-indicator {% if score >= 0.8 %}high{% elif score >= 0.6 %}med{% else %}low{% endif %}">
-                        <span class="dot"></span> {{ (score * 100)|int }}% AI Confidence
+    <div class="modern-grid">
+        {% for card in flashcards %}
+        <div class="interactive-card" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+                
+                <!-- FRONT -->
+                <div class="card-front">
+                    <div class="card-top">
+                        <span class="card-id">Concept #{{ loop.index }}</span>
+
+                        {% set score = card.get('score', 0.7) %}
+                        <div class="conf-indicator 
+                            {% if score >= 0.8 %}high
+                            {% elif score >= 0.6 %}med
+                            {% else %}low
+                            {% endif %}">
+                            <span class="dot"></span>
+                            {{ (score * 100)|int }}% AI Confidence
+                        </div>
+                    </div>
+
+                    <h3 class="question-display">
+                        {{ card.question }}
+                    </h3>
+
+                    <div class="click-prompt">
+                        Click to reveal technical definition
                     </div>
                 </div>
-                <h3 class="question-display">{{ card.question }}</h3>
-                <div class="click-prompt">Click to reveal technical definition</div>
-            </div>
 
-            <div class="card-back">
-                <div class="answer-wrapper">
-                    <p class="answer-text">{{ card.answer }}</p>
-                    
-                    {% if card.get('image_url') %}
-                    <div class="ai-visual">
-                        <img src="{{ card.image_url }}" alt="AI Visual Aid">
+                <!-- BACK -->
+                <div class="card-back">
+                    <div class="answer-wrapper">
+
+                        <p class="answer-text">
+                            {{ card.answer }}
+                        </p>
+
+                        {% if card.get('visual_explanation') %}
+                        <div class="diagram-block">
+
+                            <img 
+                                src="{{ url_for('static', filename=card.visual_explanation) }}"
+                                class="concept-diagram"
+                                alt="AI Generated Diagram">
+
+                        </div>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="ai-visual-placeholder">
-                        <span>No AI Visual available for this concept</span>
+
+                    <div class="card-footer-tag">
+                        Verified Academic Context
                     </div>
-                    {% endif %}
                 </div>
-                <div class="card-footer-tag">Verified CS Context</div>
-            </div>
+                </div>
 
+            </div>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
+
 </div>
 
 <script src="{{ url_for('static', filename='js/view_set.js') }}"></script>
+
 {% endblock %}

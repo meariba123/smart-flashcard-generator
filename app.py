@@ -175,13 +175,14 @@ def upload_notes_ajax():
 
             # UPDATED: Store image_url and score in session
             session['temp_generated'] = [
-                {
-                    "question": c.get("question",""), 
-                    "answer": c.get("answer",""), 
-                    "score": c.get("score", 0),
-                    "image_url": c.get("image_url") # ADDED THIS
-                }
-                for c in flashcards_generated
+            {
+                "question": c.get("question",""), 
+                "answer": c.get("answer",""), 
+                "score": c.get("score", 0),
+                "visual_explanation": c.get("visual_explanation"),
+                "image_url": c.get("image_url")
+            }
+            for c in flashcards_generated
             ]
             session['temp_filename'] = filename
 
@@ -238,7 +239,7 @@ def view_sets():
     return render_template('view_sets.html', sets=sets)
 
 
-# ------------------ Preview Generated Flashcards ------------------
+#Preview Generated Flashcards 
 @app.route('/preview-generated/<filename>')
 def preview_generated_flashcards(filename):
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -272,14 +273,14 @@ def save_generated_flashcards():
     # 2. Save Cards with Images and Confidence Scores
     for card in temp_cards:
         flashcards.insert_one({
-            'user_id': user_id,
-            'set_id': set_id,
-            'question': card.get('question'),
-            'answer': card.get('answer'),
-            'image_url': card.get('image_url'), # NEW: Save DALL-E link
-            'score': card.get('score', 0),       # NEW: Save Confidence score
-            'created_at': datetime.utcnow()
-        })
+        'user_id': user_id,
+        'set_id': set_id,
+        'question': card.get('question'),
+        'answer': card.get('answer'),
+        'visual_explanation': card.get('visual_explanation'),
+        'score': card.get('score', 0),
+        'created_at': datetime.utcnow()
+    })
 
     session.pop('temp_generated', None)
     session.pop('temp_filename', None)
