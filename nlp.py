@@ -21,9 +21,8 @@ except:
     nlp = spacy.load("en_core_web_sm")
 
 
-# ----------------------------
-# CONSTANTS
-# ----------------------------
+
+#CONSTANTS
 EXACT_JUNK = {
     'this', 'that', 'it', 'they', 'there',
     'what', 'which', 'who', 'example', 'examples'
