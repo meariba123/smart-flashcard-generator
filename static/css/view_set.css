@@ -194,3 +194,17 @@ body {
     margin: 4px 0;
     color: #6366f1;
 }
+
+.diagram-block {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.concept-diagram {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
