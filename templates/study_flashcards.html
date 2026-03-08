@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Study Mode | FlashMind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/study.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body class="gradient-bg">
+
+<div class="study-container">
+    <div class="top-bar">
+        <div class="set-info">
+            <span class="badge">Study Mode</span>
+            <h2>{{ flashcard_set.name }}</h2>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="exit-btn">Exit Session</a>
+    </div>
+
+    <div class="progress-section">
+        <div class="donut">
+            <svg viewBox="0 0 36 36" class="donut-svg">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path id="progressCircle" class="circle" 
+                      stroke-dasharray="{{ mastery_percent|default(0) }}, 100" 
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            </svg>
+            <div class="donut-text">
+                <span id="percentNum">{{ mastery_percent|default(0) }}</span>%
+            </div>
+        </div>
+    </div>
+
+    <div class="flashcard-wrapper">
+        <div class="flashcard" onclick="flipCard()">
+            <div class="flashcard-inner" id="cardInner">
+                <div class="flashcard-front">
+                    <div class="card-content">
+                        <h3 id="question"></h3>
+                    </div>
+                </div>
+                <div class="flashcard-back">
+                    <div class="card-content">
+                        <p id="answer"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="btn-group">
+            <button class="btn-nav" onclick="prevCard()">← Prev</button>
+            <button class="btn-shuffle" onclick="shuffleCards()">Shuffle</button>
+            <button class="btn-nav" onclick="nextCard()">Next →</button>
+        </div>
+        <div class="mode-switch">
+            {% if temp_mode %}
+                <p style="font-size: 0.9rem; color: #666;">Finish the set to save & unlock Quiz Mode!</p>
+            {% else %}
+                <a href="{{ url_for('quiz_flashcards', set_id=set_id) }}">Go to Quiz Mode</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="completionOverlay" class="completion-overlay" style="display:none;">
+    <div class="completion-content">
+        <h1>🎉 Well Done!</h1>
+        <p>You've reviewed every card in this set.</p>
+        <div class="completion-options">
+            {% if temp_mode %}
+                <form action="{{ url_for('save_generated_flashcards') }}" method="POST">
+                    <input type="hidden" name="set_name" value="{{ flashcard_set.name }}">
+                    <button type="submit" class="btn-nav" style="width:100%; margin-bottom:10px; background:#2ecc71; border:none; color:white;">Save & Start Quiz</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('quiz_flashcards', set_id=set_id) }}" class="btn-nav" style="display:block; text-decoration:none; margin-bottom:10px; background:#7B2CBF; color:white;">Take the Quiz!</a>
+            {% endif %}
+            
+            <button onclick="location.reload()" class="btn-shuffle" style="width:100%; margin-bottom:10px; border: 1px solid #ddd;">Restudy Cards</button>
+            <a href="{{ url_for('dashboard') }}" style="color: #666; text-decoration: none; font-size: 0.9rem; display: block; margin-top: 10px;">Return to Dashboard</a>
+        </div>
+    </div>
+</div>
+<script>
+let cards = {{ flashcards|tojson }};
+let currentIndex = 0;
+let viewedIndices = new Set();
+
+function renderCard(){
+    if (cards.length === 0) return;
+    let card = cards[currentIndex];
+    document.getElementById("question").innerText = card.question;
+    document.getElementById("answer").innerText = card.answer;
+    
+    viewedIndices.add(currentIndex);
+    updateProgressBar();
+}
+
+function updateProgressBar() {
+    let progress = Math.round((viewedIndices.size / cards.length) * 100);
+    document.getElementById("progressCircle").style.strokeDasharray = `${progress}, 100`;
+    document.getElementById("percentNum").innerText = progress;
+}
+
+function flipCard(){
+    const inner = document.getElementById("cardInner");
+    inner.classList.toggle("flip");
+    
+    // Trigger celebration if all cards viewed and flipped
+    if (viewedIndices.size === cards.length && inner.classList.contains("flip")) {
+        setTimeout(showCompletion, 800);
+    }
+}
+
+function showCompletion() {
+    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+    document.getElementById("completionOverlay").style.display = "flex";
+}
+
+function nextCard(){
+    document.getElementById("cardInner").classList.remove("flip");
+    setTimeout(() => {
+        currentIndex = (currentIndex + 1) % cards.length;
+        renderCard();
+    }, 150);
+}
+
+function prevCard(){
+    document.getElementById("cardInner").classList.remove("flip");
+    setTimeout(() => {
+        currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+        renderCard();
+    }, 150);
+}
+
+function shuffleCards(){
+    cards.sort(() => Math.random() - 0.5);
+    currentIndex = 0;
+    viewedIndices.clear();
+    renderCard();
+}
+
+renderCard();
+</script>
+</body>
+</html>

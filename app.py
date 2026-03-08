@@ -203,7 +203,7 @@ def review_temp():
 
     flashcard_set = {"name": "Unsaved Generated Set"}
     return render_template(
-        'review_flashcards.html',
+        'study_flashcards.html',
         flashcard_set=flashcard_set,
         flashcards=temp,
         temp_mode=True
@@ -255,8 +255,6 @@ def save_generated_flashcards():
 
     user_id = ObjectId(session['user_id'])
     set_name = request.form.get('set_name')
-    
-    # Retrieve the temp data from session
     temp_cards = session.get('temp_generated', [])
 
     # 1. Handle Set Creation/Retrieval
@@ -270,67 +268,127 @@ def save_generated_flashcards():
             'created_at': datetime.utcnow()
         }).inserted_id
 
-    # 2. Save Cards with Images and Confidence Scores
+    # 2. Save Cards
     for card in temp_cards:
         flashcards.insert_one({
-        'user_id': user_id,
-        'set_id': set_id,
-        'question': card.get('question'),
-        'answer': card.get('answer'),
-        'visual_explanation': card.get('visual_explanation'),
-        'score': card.get('score', 0),
-        'created_at': datetime.utcnow()
-    })
+            'user_id': user_id,
+            'set_id': set_id,
+            'question': card.get('question'),
+            'answer': card.get('answer'),
+            'visual_explanation': card.get('visual_explanation'),
+            'score': card.get('score', 0),
+            'created_at': datetime.utcnow()
+        })
 
     session.pop('temp_generated', None)
     session.pop('temp_filename', None)
 
-    flash('Dissertation-ready set saved successfully!', 'success')
-    return redirect(url_for('view_set', set_id=str(set_id)))
+    flash('Set saved! Moving to Quiz Mode.', 'success')
+    # REDIRECT DIRECTLY TO QUIZ
+    return redirect(url_for('quiz_flashcards', set_id=str(set_id)))
 
-
-# ------------------ Review Flashcards ------------------
-@app.route("/review/<set_id>")
-def review_flashcards(set_id):
+@app.route("/study/<set_id>")
+def study_flashcards(set_id):
     if "user_id" not in session:
         return redirect(url_for("login"))
 
     user_id = ObjectId(session["user_id"])
-    db = current_app.db
-
-    flashcard_set = db.flashcardsets.find_one({"_id": ObjectId(set_id), "user_id": user_id})
+    flashcard_set = flashcardsets.find_one({"_id": ObjectId(set_id), "user_id": user_id})
+    
     if not flashcard_set:
         return "Set not found", 404
 
-    # ✅ Convert ObjectIds in flashcard_set
-    flashcard_set["_id"] = str(flashcard_set["_id"])
-    flashcard_set["user_id"] = str(flashcard_set["user_id"])
+    cards = list(flashcards.find({"set_id": ObjectId(set_id), "user_id": user_id}))
+    
+    # Calculate progress based on mastery score or green status
+    total_cards = len(cards)
+    mastered_count = sum(1 for c in cards if c.get('status') == 'green' or c.get('mastery_score', 0) >= 0.8)
+    percent = int((mastered_count / total_cards) * 100) if total_cards > 0 else 0
 
-    # ✅ Convert ObjectIds in flashcards
-    flashcards = list(db.flashcards.find({"set_id": ObjectId(set_id), "user_id": user_id}))
-    for card in flashcards:
+    for card in cards:
         card["_id"] = str(card["_id"])
-        card["set_id"] = str(card["set_id"])
-        card["user_id"] = str(card["user_id"])
 
     return render_template(
-        "review_flashcards.html",
+        "study_flashcards.html",
         flashcard_set=flashcard_set,
-        flashcards=flashcards
+        flashcards=cards,
+        set_id=set_id,
+        mastery_percent=percent,
+        temp_mode=False
     )
 
+# ------------------ Quiz Mode ------------------
+@app.route("/quiz/<set_id>")
+def quiz_flashcards(set_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
 
+    user_id = ObjectId(session["user_id"])
+    flashcard_set = flashcardsets.find_one({"_id": ObjectId(set_id), "user_id": user_id})
 
-@app.route('/choose_review')
-def choose_review():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    user_id = ObjectId(session['user_id'])
-    sets = list(flashcardsets.find({'user_id': user_id}))
-    return render_template('choose_review.html', sets=sets)
+    if not flashcard_set:
+        return "Set not found", 404
 
+    # Fetch the cards
+    cards = list(flashcards.find({"set_id": ObjectId(set_id), "user_id": user_id}))
+    
+    # Progress calculations
+    total = len(cards)
+    mastered = sum(1 for c in cards if c.get('status') == 'green')
+    percent = int((mastered / total) * 100) if total > 0 else 0
 
-# ------------------ Check Answer (AJAX) ------------------
+    # --- THE FIX: Convert ObjectIds to Strings ---
+    flashcard_set["_id"] = str(flashcard_set["_id"])
+    for card in cards:
+        card["_id"] = str(card["_id"])
+        # If set_id is also in the card object, convert it too
+        if "set_id" in card:
+            card["set_id"] = str(card["set_id"])
+        if "user_id" in card:
+            card["user_id"] = str(card["user_id"])
+
+    return render_template(
+        "quiz_flashcards.html",
+        flashcard_set=flashcard_set,
+        flashcards=cards, # This is now safe for |tojson
+        set_id=str(set_id),
+        mastery_percent=percent
+    )
+
+# ------------------ Mastery Mode ------------------
+@app.route("/mastery/<set_id>")
+def mastery_mode(set_id):   # renamed function to avoid conflicts
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = ObjectId(session["user_id"])
+
+    flashcard_set = flashcardsets.find_one({
+        "_id": ObjectId(set_id),
+        "user_id": user_id
+    })
+
+    if not flashcard_set:
+        return "Set not found", 404
+
+    flashcard_set["_id"] = str(flashcard_set["_id"])
+
+    cards = list(flashcards.find({
+        "set_id": ObjectId(set_id),
+        "user_id": user_id
+    }))
+
+    for card in cards:
+        card["_id"] = str(card["_id"])
+
+    return render_template(
+        "mastery_mode.html",
+        flashcards=cards,
+        set_id=set_id,
+        flashcard_set=flashcard_set
+    )
+
+# ------------------ Basic Quiz Answer Check ------------------
 @app.route("/check_answer", methods=["POST"])
 def check_answer():
     data = request.get_json()
@@ -341,8 +399,63 @@ def check_answer():
         return jsonify({"correct": True})
     else:
         return jsonify({"correct": False, "correct_answer": correct_answer})
+    
 
+# ------------------ Mastery Answer Check ------------------
+@app.route("/check_mastery_answer", methods=["POST"])
+def check_mastery_answer():
+    data = request.json
+    card_id = data["card_id"]
+    user_answer = data["user_answer"]
 
+    card = flashcards.find_one({"_id": ObjectId(card_id)})
+
+    attempts = card.get("attempts", 0) + 1
+    correct_attempts = card.get("correct_attempts", 0)
+    streak = card.get("current_streak", 0)
+    xp = card.get("xp", 0)
+
+    is_correct = is_answer_correct(user_answer, card["answer"])
+
+    if is_correct:
+        correct_attempts += 1
+        streak += 1
+        xp += 10
+    else:
+        streak = 0
+
+    accuracy = correct_attempts / attempts
+    ai_conf = card.get("score", 0.7)
+
+    mastery = round((0.4 * ai_conf) + (0.6 * accuracy), 2)
+
+    if mastery >= 0.8 and attempts >= 3:
+        status = "green"
+    elif mastery >= 0.5:
+        status = "amber"
+    else:
+        status = "red"
+
+    flashcards.update_one(
+        {"_id": ObjectId(card_id)},
+        {"$set": {
+            "attempts": attempts,
+            "correct_attempts": correct_attempts,
+            "mastery_score": mastery,
+            "status": status,
+            "current_streak": streak,
+            "xp": xp
+        }}
+    )
+
+    return jsonify({
+        "correct": is_correct,
+        "status": status,
+        "mastery_score": mastery,
+        "streak": streak,
+        "xp": xp
+    })
+    
 # ------------------ File Utility ------------------
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -351,3 +464,4 @@ def allowed_file(filename):
 # ------------------ Main ------------------
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)
+

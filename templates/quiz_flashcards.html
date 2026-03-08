@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Mode - {{ flashcard_set.name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/quiz.css') }}">
+</head>
+<body class="gradient-bg">
+
+    <div class="quiz-container">
+        <header id="quizHeader">
+            <div class="stats-row">
+                <div class="stat-pill">✨ XP: <span id="xp">0</span></div>
+                <div class="stat-pill">🔥 Streak: <span id="streak">0</span></div>
+            </div>
+            <div id="masteryPills" style="margin-top: 10px; margin-bottom: 15px; font-size: 0.85rem; font-weight: 600;">
+                <span style="color:#e74c3c">● Red: <span id="count-red">0</span></span> | 
+                <span style="color:#f39c12">● Amber: <span id="count-amber">0</span></span> | 
+                <span style="color:#2ecc71">● Green: <span id="count-green">0</span></span>
+            </div>
+        </header>
+
+        <div id="quizInterface" class="quiz-card">
+            <h3 id="question">Loading question...</h3>
+            <textarea id="userAnswer" placeholder="Type your answer here..."></textarea>
+            <button class="btn-submit" onclick="submitAnswer()">Submit Mastery Answer</button>
+            <div id="feedback"></div>
+        </div>
+
+        <div id="resultScreen" style="display:none; padding: 20px;">
+            <h2 style="color: #2D3436;">🎉 Quiz Complete!</h2>
+            
+            <div class="donut-container" style="position: relative; width: 160px; margin: 25px auto;">
+                <svg viewBox="0 0 36 36" class="circular-chart purple">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3"/>
+                    <path id="donut-segment" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#7B2CBF" stroke-width="3" stroke-linecap="round"/>
+                    <text x="18" y="20.35" class="percentage" id="donut-text" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.5rem; text-anchor: middle; font-weight: bold; fill: #2D3436;">0%</text>
+                </svg>
+            </div>
+
+            <div id="finalMasterySummary" style="margin: 20px 0; line-height: 1.6; color: #636e72;"></div>
+            <a href="{{ url_for('dashboard') }}" class="btn-submit" style="display:block; text-decoration:none; margin-top: 20px;">Return to Dashboard</a>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <a href="{{ url_for('dashboard') }}" style="color: #b2bec3; text-decoration: none; font-size: 0.8rem; font-weight: 600;">Exit Quiz Session</a>
+        </div>
+    </div>
+
+    <script>
+        // Data injected from Flask
+        let cards = {{ flashcards|tojson }};
+        let currentIndex = 0;
+
+        /**
+         * Renders the current question or triggers the result screen if finished.
+         */
+        function renderCard() {
+            if (currentIndex >= cards.length) {
+                showResults();
+                return;
+            }
+            document.getElementById("question").innerText = cards[currentIndex].question;
+            document.getElementById("userAnswer").value = "";
+            document.getElementById("feedback").style.display = "none";
+        }
+
+        /**
+         * Sends user answer to the server for AI mastery analysis.
+         */
+        function submitAnswer() {
+            const btn = document.querySelector('.btn-submit');
+            const answer = document.getElementById("userAnswer").value;
+            
+            if (!answer.trim()) {
+                alert("Please type an answer before submitting!");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Analyzing Answer...";
+
+            // Send to mastery endpoint
+            fetch("/check_mastery_answer", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({
+                    card_id: cards[currentIndex]._id,
+                    user_answer: answer
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Update the local card object with new DB values
+                cards[currentIndex].status = data.status;
+                cards[currentIndex].mastery_score = data.mastery_score;
+
+                // Update UI counters
+                document.getElementById("xp").innerText = data.xp;
+                document.getElementById("streak").innerText = data.streak;
+                updateMasteryPills();
+
+                // Provide instant feedback
+                let feedback = document.getElementById("feedback");
+                feedback.className = data.correct ? "correct" : "incorrect";
+                feedback.innerText = data.correct ? "✅ That's spot on!" : "❌ Not quite. Keep practicing!";
+                feedback.style.display = "block";
+
+                // Pause for 1.5 seconds so user can read feedback, then progress
+                setTimeout(() => {
+                    currentIndex++; 
+                    
+                    if (currentIndex < cards.length) {
+                        btn.disabled = false;
+                        btn.innerText = "Submit Mastery Answer";
+                        renderCard();
+                    } else {
+                        showResults(); 
+                    }
+                }, 1500);
+            })
+            .catch(err => {
+                console.error("Quiz Error:", err);
+                btn.disabled = false;
+                btn.innerText = "Error - Try Again";
+            });
+        }
+
+        /**
+         * Recalculates the Red/Amber/Green distribution for the header.
+         */
+        function updateMasteryPills() {
+            let counts = { red: 0, amber: 0, green: 0 };
+            cards.forEach(c => {
+                if (c.status === "green") counts.green++;
+                else if (c.status === "amber") counts.amber++;
+                else counts.red++; // Treat new or 'red' status as red
+            });
+            document.getElementById("count-red").innerText = counts.red;
+            document.getElementById("count-amber").innerText = counts.amber;
+            document.getElementById("count-green").innerText = counts.green;
+            return counts;
+        }
+
+        /**
+         * Hides quiz UI and shows the final mastery donut chart.
+         */
+        function showResults() {
+            document.getElementById("quizInterface").style.display = "none";
+            document.getElementById("quizHeader").style.display = "none";
+            document.getElementById("resultScreen").style.display = "block";
+
+            let finalCounts = updateMasteryPills();
+            let total = cards.length;
+            let masteredPercent = Math.round((finalCounts.green / total) * 100);
+
+            // Animate the donut chart
+            document.getElementById("donut-segment").setAttribute("stroke-dasharray", `${masteredPercent}, 100`);
+            document.getElementById("donut-text").textContent = masteredPercent + "%";
+
+            document.getElementById("finalMasterySummary").innerHTML = `
+                <p>You mastered <strong>${finalCounts.green}</strong> out of ${total} concepts today!</p>
+                <p style="font-size: 0.9rem;">Your updated progress has been saved to your dashboard.</p>
+            `;
+        }
+
+        // Initialize quiz state on load
+        renderCard();
+        updateMasteryPills();
+    </script>
+</body>
+</html>

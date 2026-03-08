@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mastery Mode</title>
+  <link rel="stylesheet" href="/static/css/mastery_mode.css">
+</head>
+<body>
+
+<h2>Adaptive Mastery Mode</h2>
+
+<div id="masteryCard" class="card">
+  <div id="masteryQuestion"></div>
+  <input type="text" id="masteryInput" placeholder="Your answer">
+  <button id="submitMastery">Submit</button>
+  <div id="masteryFeedback"></div>
+</div> 
+
+<div id="masteryStats"></div>
+
+<script>
+  const flashcards = {{ flashcards|tojson }};
+  const setId = "{{ set_id }}";
+</script>
+
+<script src="/static/js/mastery_mode.js"></script>
+</body>
+</html>
