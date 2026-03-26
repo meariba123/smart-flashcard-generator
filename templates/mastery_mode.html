@@ -1,27 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mastery Mode</title>
-  <link rel="stylesheet" href="/static/css/mastery_mode.css">
+    <title>Mastery Mode | FlashMind</title>
+    <link rel="stylesheet" href="/static/css/mastery_mode.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="gradient-bg">
 
-<h2>Adaptive Mastery Mode</h2>
+    <div class="mastery-container">
+        <div id="masteryCard" class="card">
+            <h2 id="masteryQuestion">Loading...</h2>
+            <textarea id="masteryInput" placeholder="Type your answer here..."></textarea>
+            <button id="submitMastery" class="btn-submit">Submit Answer</button>
+            <div id="masteryFeedback" class="feedback-msg"></div>
+        </div>
 
-<div id="masteryCard" class="card">
-  <div id="masteryQuestion"></div>
-  <input type="text" id="masteryInput" placeholder="Your answer">
-  <button id="submitMastery">Submit</button>
-  <div id="masteryFeedback"></div>
-</div> 
+        <div id="masteryComplete" style="display:none; text-align: center; padding: 40px;">
+            <h1 style="font-size: 3rem;">🏆</h1>
+            <h2>Set Fully Mastered!</h2>
+            <p>Every concept in this set is now at Green status.</p>
+            <a href="/dashboard" class="btn-submit" style="display:inline-block; text-decoration:none; margin-top:20px;">Return to Dashboard</a>
+        </div>
 
-<div id="masteryStats"></div>
+        <div id="masteryStats" class="stats-footer">
+            Green: 0 | Amber: 0 | Red: 0
+        </div>
+    </div>
 
-<script>
-  const flashcards = {{ flashcards|tojson }};
-  const setId = "{{ set_id }}";
-</script>
-
-<script src="/static/js/mastery_mode.js"></script>
+    <script>
+        // Injecting data from Flask
+        const flashcards = {{ flashcards|tojson }};
+        const setId = "{{ set_id }}";
+    </script>
+    <script src="/static/js/mastery_mode.js"></script>
 </body>
 </html>

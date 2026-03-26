@@ -259,8 +259,11 @@ def save_generated_flashcards():
 
     # 1. Handle Set Creation/Retrieval
     existing_set = flashcardsets.find_one({'user_id': user_id, 'name': set_name})
+    
     if existing_set:
         set_id = existing_set['_id']
+        # --- FIX: Clear existing cards so they don't duplicate to 182+ ---
+        flashcards.delete_many({'set_id': set_id})
     else:
         set_id = flashcardsets.insert_one({
             'user_id': user_id,
@@ -277,6 +280,9 @@ def save_generated_flashcards():
             'answer': card.get('answer'),
             'visual_explanation': card.get('visual_explanation'),
             'score': card.get('score', 0),
+            'status': 'red', # Initialize status
+            'attempts': 0,
+            'correct_attempts': 0,
             'created_at': datetime.utcnow()
         })
 
@@ -284,7 +290,6 @@ def save_generated_flashcards():
     session.pop('temp_filename', None)
 
     flash('Set saved! Moving to Quiz Mode.', 'success')
-    # REDIRECT DIRECTLY TO QUIZ
     return redirect(url_for('quiz_flashcards', set_id=str(set_id)))
 
 @app.route("/study/<set_id>")
@@ -409,7 +414,10 @@ def check_mastery_answer():
     user_answer = data["user_answer"]
 
     card = flashcards.find_one({"_id": ObjectId(card_id)})
+    if not card:
+        return jsonify({"error": "Card not found"}), 404
 
+    # Get current stats or default to 0
     attempts = card.get("attempts", 0) + 1
     correct_attempts = card.get("correct_attempts", 0)
     streak = card.get("current_streak", 0)
@@ -424,12 +432,16 @@ def check_mastery_answer():
     else:
         streak = 0
 
+    # Calculate Accuracy
     accuracy = correct_attempts / attempts
+    # Use the AI generation score as a baseline for difficulty/confidence
     ai_conf = card.get("score", 0.7)
 
+    # Mastery Calculation: 40% AI confidence, 60% user accuracy
     mastery = round((0.4 * ai_conf) + (0.6 * accuracy), 2)
 
-    if mastery >= 0.8 and attempts >= 3:
+    # --- FIX: Logical thresholds without 'attempts >= 3' gatekeeping ---
+    if mastery >= 0.8:
         status = "green"
     elif mastery >= 0.5:
         status = "amber"
@@ -455,7 +467,7 @@ def check_mastery_answer():
         "streak": streak,
         "xp": xp
     })
-    
+
 # ------------------ File Utility ------------------
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
