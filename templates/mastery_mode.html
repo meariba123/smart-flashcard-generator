@@ -8,24 +8,34 @@
 <body class="gradient-bg">
 
     <div class="mastery-container">
-        <div id="masteryCard" class="card">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <span id="masteryBadge" style="background: #E0AAFF; color: #5A189A; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+            Targeting Knowledge Gaps
+        </span>
+    </div>
+
+    <div id="masteryCard" class="card">
+        <div id="cardContent">
             <h2 id="masteryQuestion">Loading...</h2>
             <textarea id="masteryInput" placeholder="Type your answer here..."></textarea>
             <button id="submitMastery" class="btn-submit">Submit Answer</button>
             <div id="masteryFeedback" class="feedback-msg"></div>
         </div>
-
-        <div id="masteryComplete" style="display:none; text-align: center; padding: 40px;">
-            <h1 style="font-size: 3rem;">🏆</h1>
-            <h2>Set Fully Mastered!</h2>
-            <p>Every concept in this set is now at Green status.</p>
-            <a href="/dashboard" class="btn-submit" style="display:inline-block; text-decoration:none; margin-top:20px;">Return to Dashboard</a>
-        </div>
-
-        <div id="masteryStats" class="stats-footer">
-            Green: 0 | Amber: 0 | Red: 0
-        </div>
     </div>
+
+    <div id="masteryComplete" style="display:none; text-align: center; padding: 40px; background: white; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+        <h1 style="font-size: 4rem; margin-bottom: 10px;">🎓</h1>
+        <h2 style="margin-bottom: 10px;">Subject Mastery Achieved!</h2>
+        <p style="color: #636e72; margin-bottom: 30px;">All concepts have been successfully moved to high-retention status.</p>
+        <a href="/dashboard" class="btn-submit" style="display:inline-block; text-decoration:none;">Finish Session</a>
+    </div>
+
+    <div id="masteryStats" class="stats-footer">
+        <span style="color: #2ecc71;">● Green: <span id="m-green">0</span></span> &nbsp;|&nbsp; 
+        <span style="color: #f39c12;">● Amber: <span id="m-amber">0</span></span> &nbsp;|&nbsp; 
+        <span style="color: #e74c3c;">● Red: <span id="m-red">0</span></span>
+    </div>
+</div>
 
     <script>
         // Injecting data from Flask

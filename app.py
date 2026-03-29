@@ -360,36 +360,44 @@ def quiz_flashcards(set_id):
         mastery_percent=percent
     )
 
-# ------------------ Mastery Mode ------------------
+# Mastery Mode 
+# Mastery Mode 
 @app.route("/mastery/<set_id>")
-def mastery_mode(set_id):   # renamed function to avoid conflicts
+def mastery_mode(set_id):
     if "user_id" not in session:
         return redirect(url_for("login"))
 
     user_id = ObjectId(session["user_id"])
-
-    flashcard_set = flashcardsets.find_one({
-        "_id": ObjectId(set_id),
-        "user_id": user_id
-    })
+    flashcard_set = flashcardsets.find_one({"_id": ObjectId(set_id), "user_id": user_id})
 
     if not flashcard_set:
         return "Set not found", 404
 
+    # Convert the set's own ID to string
     flashcard_set["_id"] = str(flashcard_set["_id"])
 
-    cards = list(flashcards.find({
-        "set_id": ObjectId(set_id),
-        "user_id": user_id
-    }))
-
-    for card in cards:
-        card["_id"] = str(card["_id"])
+    # Fetch and CLEAN the cards explicitly
+    raw_cards = list(flashcards.find({"set_id": ObjectId(set_id), "user_id": user_id}))
+    
+    clean_cards = []
+    for card in raw_cards:
+        clean_cards.append({
+            "_id": str(card["_id"]),
+            "set_id": str(card["set_id"]),
+            "question": card.get("question", ""),
+            "answer": card.get("answer", ""),
+            "status": card.get("status", "red"),
+            "mastery_score": card.get("mastery_score", 0),
+            "attempts": card.get("attempts", 0),
+            "xp": card.get("xp", 0),
+            "current_streak": card.get("current_streak", 0),
+            "visual_explanation": card.get("visual_explanation", "")
+        })
 
     return render_template(
         "mastery_mode.html",
-        flashcards=cards,
-        set_id=set_id,
+        flashcards=clean_cards,  # Pass the cleaned list
+        set_id=str(set_id),
         flashcard_set=flashcard_set
     )
 

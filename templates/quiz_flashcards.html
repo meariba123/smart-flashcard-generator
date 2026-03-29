@@ -28,20 +28,36 @@
             <div id="feedback" style="margin-top:15px; font-weight:600; display:none;"></div>
         </div>
 
-        <div id="resultScreen" style="display:none; padding: 20px; text-align: center;">
-            <h2 style="color: #2D3436;">🎉 Quiz Complete!</h2>
+        <div id="resultScreen" style="display:none; padding: 40px 20px; text-align: center;">
+            <div class="confetti-icon" style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
+            <h2 style="color: #2D3436; font-size: 2rem; margin-bottom: 5px;">Session Complete!</h2>
+            <p style="color: #636e72; margin-bottom: 30px;">Here is your mastery breakdown</p>
             
-            <div class="donut-container" style="position: relative; width: 160px; margin: 25px auto;">
-                <svg viewBox="0 0 36 36" class="circular-chart purple">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3"/>
-                    <path id="donut-segment" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#7B2CBF" stroke-width="3" stroke-linecap="round"/>
-                    <text x="18" y="20.35" class="percentage" id="donut-text" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.5rem; text-anchor: middle; font-weight: bold; fill: #2D3436;">0%</text>
-                </svg>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 40px; margin-bottom: 40px; flex-wrap: wrap;">
+                <div class="donut-container" style="position: relative; width: 180px;">
+                    <svg viewBox="0 0 36 36" class="circular-chart purple">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#f1f2f6" stroke-width="2.5"/>
+                        <path id="donut-segment" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#7B2CBF" stroke-width="3" stroke-linecap="round" style="transition: stroke-dasharray 1.5s ease-in-out;"/>
+                        <text x="18" y="21" class="percentage" id="donut-text" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.6rem; text-anchor: middle; font-weight: 800; fill: #2D3436;">0%</text>
+                    </svg>
+                </div>
+
+                <div style="text-align: left; min-width: 200px;">
+                    <div id="masteryBadge" style="display: inline-block; padding: 5px 15px; border-radius: 20px; background: #eee; font-size: 0.8rem; font-weight: 700; margin-bottom: 15px; text-transform: uppercase;">RANK: NOVICE</div>
+                    <div style="font-size: 0.95rem; color: #2d3436; margin-bottom: 8px;">✅ <strong id="res-mastered">0</strong> Mastered</div>
+                    <div style="font-size: 0.95rem; color: #2d3436; margin-bottom: 8px;">⏳ <strong id="res-remaining">0</strong> To Go</div>
+                    <div style="font-size: 0.95rem; color: #2d3436;">🔥 Session XP: <strong id="res-xp">0</strong></div>
+                </div>
             </div>
 
-            <div id="finalMasterySummary" style="margin: 20px 0; line-height: 1.6; color: #636e72;"></div>
-            <a href="{{ url_for('dashboard') }}" class="btn-submit" style="display:block; text-decoration:none; margin-top: 20px;">Return to Dashboard</a>
-            <a href="{{ url_for('mastery_mode', set_id=set_id) }}" style="display:block; margin-top:15px; color:#7B2CBF; font-weight:600; text-decoration:none;">Continue in Mastery Mode →</a>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 30px; border: 1px solid #e9ecef;">
+                <p id="dissertation-remark" style="font-style: italic; color: #636e72; font-size: 0.9rem; margin: 0;"></p>
+            </div>
+
+            <div class="action-buttons" style="display: flex; flex-direction: column; gap: 12px; max-width: 300px; margin: 0 auto;">
+                <a href="{{ url_for('mastery_mode', set_id=set_id) }}" class="btn-submit" style="text-decoration:none; background: #7B2CBF; box-shadow: 0 4px 15px rgba(123, 44, 191, 0.3);">Continue to Mastery Mode →</a>
+                <a href="{{ url_for('dashboard') }}" style="text-decoration:none; color: #636e72; font-weight: 600; font-size: 0.9rem; padding: 10px;">Return to Dashboard</a>
+            </div>
         </div>
 
         <div style="margin-top: 30px;">
@@ -90,25 +106,21 @@
             })
             .then(res => res.json())
             .then(data => {
-                // Update local data
                 cards[currentIndex].status = data.status;
                 
-                // Update Stats
                 document.getElementById("xp").innerText = data.xp;
                 document.getElementById("streak").innerText = data.streak;
                 updateMasteryPills();
 
-                // Feedback
                 let feedback = document.getElementById("feedback");
                 feedback.className = data.correct ? "feedback-msg correct" : "feedback-msg incorrect";
                 feedback.innerText = data.correct ? "✅ That's spot on!" : "❌ Not quite. Keep practicing!";
                 feedback.style.display = "block";
                 feedback.style.color = data.correct ? "#2ecc71" : "#e74c3c";
 
-                // Move to next card after delay
                 setTimeout(() => {
                     currentIndex++;
-                    renderCard(); // This will trigger showResults if we are at the end
+                    renderCard();
                 }, 1500);
             })
             .catch(err => {
@@ -131,6 +143,7 @@
             return counts;
         }
 
+        // UPGRADED Dissertation-style Result Logic
         function showResults() {
             document.getElementById("quizInterface").style.display = "none";
             document.getElementById("quizHeader").style.display = "none";
@@ -140,13 +153,35 @@
             let total = cards.length;
             let masteredPercent = Math.round((finalCounts.green / total) * 100);
 
-            document.getElementById("donut-segment").setAttribute("stroke-dasharray", `${masteredPercent}, 100`);
-            document.getElementById("donut-text").textContent = masteredPercent + "%";
+            // Animate Donut Chart
+            setTimeout(() => {
+                document.getElementById("donut-segment").setAttribute("stroke-dasharray", `${masteredPercent}, 100`);
+                document.getElementById("donut-text").textContent = masteredPercent + "%";
+            }, 300);
 
-            document.getElementById("finalMasterySummary").innerHTML = `
-                <p>You mastered <strong>${finalCounts.green}</strong> out of ${total} concepts in this round!</p>
-                <p style="font-size: 0.9rem;">To turn the remaining <strong>${total - finalCounts.green}</strong> items green, try Mastery Mode.</p>
-            `;
+            // Update Stats Display
+            document.getElementById("res-mastered").innerText = finalCounts.green;
+            document.getElementById("res-remaining").innerText = total - finalCounts.green;
+            document.getElementById("res-xp").innerText = document.getElementById("xp").innerText;
+
+            // Dynamic Rank & Remark
+            let remark = "";
+            let badge = document.getElementById("masteryBadge");
+            
+            if (masteredPercent === 100) {
+                remark = "Excellent achievement. You have demonstrated comprehensive mastery over this academic module.";
+                badge.innerText = "RANK: SCHOLAR";
+                badge.style.background = "#d1fadf"; badge.style.color = "#027a48";
+            } else if (masteredPercent > 60) {
+                remark = "Strong performance. Most core concepts are internalized, though some edge cases require review.";
+                badge.innerText = "RANK: COMPETENT";
+                badge.style.background = "#fef0c7"; badge.style.color = "#b54708";
+            } else {
+                remark = "Preliminary understanding established. We recommend utilizing Mastery Mode to target specific knowledge gaps.";
+                badge.innerText = "RANK: LEARNER";
+                badge.style.background = "#fee4e2"; badge.style.color = "#b42318";
+            }
+            document.getElementById("dissertation-remark").innerText = remark;
         }
 
         renderCard();
