@@ -1,67 +1,88 @@
 {% extends "layout.html" %}
 {% block content %}
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
-<div class="dashboard-container">
-<div class="nav-pill-container">
-    <div class="nav-pill">
-        <a href="{{ url_for('dashboard') }}" class="active">Dashboard</a>
-        <a href="{{ url_for('view_sets') }}">View All Sets</a> 
-        <a href="{{ url_for('logout') }}">Logout</a>
-    </div>
+<!-- <div class="dashboard-wrapper">
+    <nav class="glass-nav">
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}" class="nav-item active">Dashboard</a>
+            <a href="{{ url_for('view_sets') }}" class="nav-item">Flashcard Sets</a> 
+            <a href="{{ url_for('logout') }}" class="nav-item logout">Logout</a>
+        </div>
+    </nav> -->
+
+    <main class="dashboard-content">
+        <header class="welcome-section">
+            <h1 class="hero-text">Welcome back, {{ session.username }}.</h1>
+            <p class="sub-text">Transform your research papers and notes into structured knowledge.</p>
+        </header>
+
+        <section class="feature-grid">
+            <div class="feature-card">
+                <div class="icon-box purple"><i data-lucide="file-text"></i></div>
+                <div class="card-info">
+                    <h3>Smart Upload</h3>
+                    <p>AI-driven extraction from PDF, DocX, and Text.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box blue"><i data-lucide="binary"></i></div>
+                <div class="card-info">
+                    <h3>Cognitive Logic</h3>
+                    <p>Cards organized by confidence and retention.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box gold"><i data-lucide="line-chart"></i></div>
+                <div class="card-info">
+                    <h3>Mastery Tracking</h3>
+                    <p>Detailed analytics on your learning progress.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="upload-container glass-card"> 
+            <div id="uploadForm">
+                <div class="upload-header">
+                    <i data-lucide="plus-circle" class="main-icon"></i>
+                    <h2>Initialize New Study Set</h2>
+                    <p>Drag files here or click to browse your local directory</p>
+                </div>
+                
+                <div class="upload-controls">
+                    <div class="select-wrapper">
+                        <label for="targetLanguage">Target Language</label>
+                        <select id="targetLanguage" name="target_lang">
+                            <option value="en">English (Academic)</option>
+                            <option value="es">Spanish (Castilian)</option>
+                        </select>
+                    </div>
+                    
+                    <input type="file" id="fileInput" hidden> 
+                    <button type="button" class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i data-lucide="upload"></i> Upload Document
+                    </button>
+                </div>
+            </div>
+
+            <div id="loadingStatus" class="loader-overlay" style="display:none;">
+                <div class="progress-ring-container">
+                    <svg class="progress-ring" width="120" height="120">
+                        <circle class="progress-ring__circle" stroke="#5d2a9d" stroke-width="6" fill="transparent" r="52" cx="60" cy="60"/>
+                    </svg>
+                    <div class="percentage-label" id="progressPercent">0%</div>
+                </div>
+                <h3>Processing Academic Content</h3>
+                <p>Synthesizing concepts and generating flashcards...</p>
+            </div>
+        </section>
+    </main>
 </div>
 
-    <div class="welcome-header">
-        <h1>Welcome, {{ session.username }}! Ready to turn your notes into knowledge?</h1>
-        <p>This dashboard is your central hub for creating and managing your smart flashcards.</p>
-    </div>
-
-    <div class="steps-row">
-        <div class="step-box">
-            <img src="/static/icons/file-icon.png" alt="Upload">
-            <div>
-                <h3>1. Upload Notes</h3>
-                <p>Select your CS files (.txt, .docx, .pdf) for AI extraction.</p>
-            </div>
-        </div>
-        <div class="step-box">
-            <img src="/static/icons/cards-icon.png" alt="View">
-            <div>
-                <h3>2. View Flashcards</h3>
-                <p>Access sets organized by AI confidence score.</p>
-            </div>
-        </div>
-        <div class="step-box">
-            <img src="/static/icons/brain-icon.png" alt="Quiz">
-            <div>
-                <h3>3. Review & Quiz</h3>
-                <p>Monitor your mastery via interactive quizzes.</p>
-            </div>
-        </div>
-    </div>
-
-<div class="upload-box"> 
-    <h3>Start a New Study Set</h3> 
-    <p>Drag and drop your file here, or click to browse.</p> 
-    
-    <div class="language-selector" style="margin-bottom: 15px;">
-        <label for="targetLanguage" style="font-size: 0.9rem; color: #5d2a9d; font-weight: 600;">Translate to:</label>
-        <select id="targetLanguage" style="padding: 5px; border-radius: 8px; border: 1px solid #ddd; outline: none; margin-left: 10px;">
-            <option value="en">English (Default)</option>
-            <option value="es">Spanish</option>
-        </select>
-    </div>
-    
-    <input type="file" name="notes_file" id="fileInput" hidden> 
-    <button type="button" onclick="document.getElementById('fileInput').click()"> Choose file </button> 
-    <span id="fileName"></span>
-
-    <div id="loadingStatus" style="display:none; margin-top:10px; color:#5d2a9d;">
-        <b>Processing your notes... please wait.</b>
-    </div>
-</div>
 <script>
     const UPLOAD_URL = "{{ url_for('upload_notes_ajax') }}";
+    lucide.createIcons();
 </script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

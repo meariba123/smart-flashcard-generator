@@ -9,6 +9,7 @@ import pytesseract
 from rapidfuzz import fuzz
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
+from deep_translator import GoogleTranslator  # <--- New Import
 
 # LOAD SPACY
 try:
@@ -18,14 +19,21 @@ except:
     nlp = spacy.load("en_core_web_sm")
 
 # CONSTANTS
-EXACT_JUNK = {
-    'this', 'that', 'it', 'they', 'there',
-    'what', 'which', 'who', 'example', 'examples'
-}
-
+EXACT_JUNK = {'this', 'that', 'it', 'they', 'there', 'what', 'which', 'who', 'example', 'examples'}
 URL_PATTERN = r'(https?://\S+|www\.\S+|\S+\.com/\S+|\S+\.be/\S+)'
 PREFIX_JUNK = r'^(e\.g\.|i\.e\.|etc|example:|note:)\s+'
 MAX_VISUALS = 3
+
+# --- NEW TRANSLATION HELPER ---
+def translate_if_needed(text, target_lang):
+    if not text or target_lang == 'en':
+        return text
+    try:
+        # Translates from English (auto-detected) to your target (e.g., 'es')
+        return GoogleTranslator(source='auto', target=target_lang).translate(text)
+    except Exception as e:
+        print(f"Translation Error: {e}")
+        return text
 
 # CLEANING FUNCTIONS
 def clean_term(term):
@@ -40,22 +48,17 @@ def clean_text(text):
     return text.strip()
 
 def is_valid_term(term):
-    if not term: return False
-    term_lower = term.lower()
-    if term_lower in EXACT_JUNK: return False
-    if any(x in term_lower for x in ["http", "www", "//", ".com", ".be"]): return False
-    if len(term.split()) > 7: return False
-    if len(term) < 3: return False
+    if not term or len(term) < 3: return False
+    if term.lower() in EXACT_JUNK: return False
     if not re.search(r'[a-zA-Z]', term): return False
     return True
 
-# STRUCTURED VISUAL EXPLANATION
+# VISUAL EXPLANATION
 def generate_visual_explanation(term):
     try:
         safe_term = re.sub(r'[^a-zA-Z0-9_]', '_', term.strip())
         img = Image.new("RGB", (900, 450), "white")
         draw = ImageDraw.Draw(img)
-
         try:
             font_title = ImageFont.truetype("arial.ttf", 42)
             font_body = ImageFont.truetype("arial.ttf", 22)
@@ -63,29 +66,12 @@ def generate_visual_explanation(term):
             font_title = ImageFont.load_default()
             font_body = ImageFont.load_default()
 
-        doc = nlp(term)
-        keywords = [token.text for token in doc if token.pos_ in ["NOUN", "PROPN"]]
-
-        concept = term
-        process = f"Involves {', '.join(keywords[:3])}" if keywords else "Core mechanism"
-        outcome = "Produces structured output"
-
         draw.text((40, 20), term, fill="black", font=font_title)
-        
-        concept_wrapped = textwrap.fill(concept, width=28)
-        process_wrapped = textwrap.fill(process, width=28)
-        outcome_wrapped = textwrap.fill(outcome, width=28)
-
-        draw.text((60, 150), f"Concept:\n{concept_wrapped}", fill="blue", font=font_body)
-        draw.text((350, 150), f"Process:\n{process_wrapped}", fill="green", font=font_body)
-        draw.text((650, 150), f"Outcome:\n{outcome_wrapped}", fill="red", font=font_body)
-
         os.makedirs("static/generated_images", exist_ok=True)
         image_path = f"static/generated_images/{safe_term}.png"
         img.save(image_path)
         return f"generated_images/{safe_term}.png"
-    except Exception as e:
-        print("VISUAL EXPLANATION FAILED:", str(e))
+    except:
         return None
 
 # TEXT EXTRACTION
@@ -94,8 +80,7 @@ def extract_text_from_file(filepath):
     text = ""
     try:
         if ext == ".txt":
-            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                text = f.read()
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f: text = f.read()
         elif ext == ".docx":
             doc = Document(filepath)
             text = "\n".join([para.text for para in doc.paragraphs])
@@ -106,24 +91,17 @@ def extract_text_from_file(filepath):
             text = pytesseract.image_to_string(Image.open(filepath))
         elif ext == ".pptx":
             prs = Presentation(filepath)
-            full_text = []
-            for slide in prs.slides:
-                for shape in slide.shapes:
-                    if hasattr(shape, "text") and shape.text.strip():
-                        full_text.append(shape.text)
-            text = "\n".join(full_text)
+            text = "\n".join([shape.text for slide in prs.slides for shape in slide.shapes if hasattr(shape, "text")])
     except Exception as e:
-        print(f"Error extracting text: {e}")
+        print(f"Extraction Error: {e}")
     return text
 
-# ----------------------------
-# FLASHCARD GENERATION (CORE UPDATE)
-# ----------------------------
+# --- FLASHCARD GENERATION WITH TRANSLATION ---
 def generate_flashcards_from_file(filepath, language='en'):
+    print(f"DEBUG: Generating flashcards in language: {language}")
     ext = os.path.splitext(filepath)[1].lower()
     flashcards = []
 
-    # Language Config
     lang_config = {
         'es': {"prefix": "¿Qué es", "suffix": "?"},
         'en': {"prefix": "What is", "suffix": "?"}
@@ -133,70 +111,54 @@ def generate_flashcards_from_file(filepath, language='en'):
     if ext == ".pptx":
         prs = Presentation(filepath)
         for slide in prs.slides:
-            title, content_lines = "", []
+            title, content = "", []
             for shape in slide.shapes:
                 if hasattr(shape, "text") and shape.text.strip():
-                    text = shape.text.strip()
-                    if not title: title = text
-                    else: content_lines.append(text)
+                    if not title: title = shape.text.strip()
+                    else: content.append(shape.text.strip())
+            
+            if is_valid_term(title) and content:
+                # TRANSLATE HERE
+                final_term = translate_if_needed(title, language)
+                final_content = translate_if_needed(" ".join(content), language)
 
-            if not title or len(title) > 80: continue
-            combined_content = " ".join(content_lines)
-            if len(combined_content) < 20: continue
-
-            if is_valid_term(title):
                 flashcards.append({
-                    "question": f"{l['prefix']} {title.strip()}{l['suffix']}",
-                    "answer": combined_content.strip(),
+                    "question": f"{l['prefix']} {final_term}{l['suffix']}",
+                    "answer": final_content,
                     "visual_explanation": None,
-                    "score": 0.9,
-                    "language": language
+                    "score": 0.9
                 })
     else:
         text = extract_text_from_file(filepath)
-        lines = text.split('\n')
-        for line in lines:
-            line = line.strip()
+        for line in text.split('\n'):
             if ":" in line:
                 parts = line.split(":", 1)
                 term = clean_term(parts[0])
                 definition = clean_text(parts[1])
-                if is_valid_term(term) and len(definition) > 15:
+                if is_valid_term(term) and len(definition) > 10:
+                    # TRANSLATE HERE
+                    final_term = translate_if_needed(term, language)
+                    final_content = translate_if_needed(definition, language)
+
                     flashcards.append({
-                        "question": f"{l['prefix']} {term}{l['suffix']}",
-                        "answer": definition,
+                        "question": f"{l['prefix']} {final_term}{l['suffix']}",
+                        "answer": final_content,
                         "visual_explanation": None,
-                        "score": 0.8,
-                        "language": language
+                        "score": 0.8
                     })
 
-    # DEDUPLICATE
-    unique = {}
-    for card in flashcards:
-        unique[card["question"].lower()] = card
+    # Deduplicate and finalize
+    unique = {c["question"].lower(): c for c in flashcards}
     flashcards = list(unique.values())
 
-    if not flashcards: return []
-
-    # GENERATE VISUALS (stripping lang prefixes for image generator)
     for card in flashcards[:MAX_VISUALS]:
-        term_to_draw = card["question"]
-        for p in ["What is ", "¿Qué es "]: term_to_draw = term_to_draw.replace(p, "")
-        term_to_draw = term_to_draw.replace("?", "")
-        card["visual_explanation"] = generate_visual_explanation(term_to_draw)
+        # Generate visual using the translated term
+        clean_q = card["question"].replace(l['prefix'], "").replace(l['suffix'], "").strip()
+        card["visual_explanation"] = generate_visual_explanation(clean_q)
 
     random.shuffle(flashcards)
     return flashcards
 
-# ANSWER CHECKING
 def is_answer_correct(user_answer, correct_answer, threshold=75):
-    user_answer = user_answer.lower().strip()
-    correct_answer = correct_answer.lower().strip()
-    similarity = fuzz.ratio(user_answer, correct_answer)
-    if similarity >= threshold: return True
-    user_keywords = set(user_answer.split())
-    correct_keywords = set(correct_answer.split())
-    if len(correct_keywords) > 0:
-        overlap = len(user_keywords & correct_keywords) / len(correct_keywords)
-        if overlap > 0.6: return True
-    return False
+    user_answer, correct_answer = user_answer.lower().strip(), correct_answer.lower().strip()
+    return fuzz.ratio(user_answer, correct_answer) >= threshold

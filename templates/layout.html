@@ -10,11 +10,9 @@
 <header>
   {% if session.username %}
   <nav class="navbar">
-    <a href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a href="{{ url_for('create_set') }}">View Your Flashcards Sets</a>
-    <a href="{{ url_for('dashboard') }}">Study</a>
-    <a href="{{ url_for('progress.progress_page') }}">Progress</a>
-    <a href="{{ url_for('logout') }}">Logout</a>
+    <a href="{{ url_for('dashboard') }}" class="nav-item active">Dashboard</a>
+    <a href="{{ url_for('view_sets') }}" class="nav-item">Flashcard Sets</a> 
+    <a href="{{ url_for('logout') }}" class="nav-item logout">Logout</a>
   </nav>
   {% endif %}
 </header>
