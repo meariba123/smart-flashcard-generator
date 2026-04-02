@@ -4,46 +4,46 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
 <div class="dashboard-container">
-
-```
-<div class="nav-pill">
-    <a href="{{ url_for('study_flashcards', set_id=set._id) }}">Study</a>
-    <a href="{{ url_for('quiz_flashcards', set_id=set._id) }}">Quiz</a>
-    <a href="{{ url_for('mastery_mode', set_id=set._id) }}">Mastery</a>
-</div>
-
-<h2 class="section-title">Your Flashcard Sets</h2>
-
-<div class="sets-list">
-    {% for set in sets %}
-    <div class="set-card">
-
-        <h3>{{ set.name }}</h3>
-        <p>{{ set.count }} cards</p>
-
-        <div class="status-indicator 
-            {% if set.avg_score >= 0.8 %}green
-            {% elif set.avg_score >= 0.5 %}amber
-            {% else %}red{% endif %}">
+    <div class="nav-pill-container">
+        <div class="nav-pill">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('view_sets') }}" class="active">View All Sets</a> 
+            <a href="{{ url_for('logout') }}">Logout</a>
         </div>
-
-        <p class="conf-text">
-            {% if set.avg_score >= 0.8 %}
-                High Confidence
-            {% elif set.avg_score >= 0.5 %}
-                Medium Confidence
-            {% else %}
-                Needs Review
-            {% endif %}
-        </p>
-
-        <a href="{{ url_for('review_flashcards', set_id=set._id) }}" class="btn-review">
-        <a href="{{ url_for('study_flashcards', set_id=set._id) }}" class="btn-review">
-
     </div>
-    {% endfor %}
-</div>
-```
 
+    <h2 class="section-title">Your Flashcard Sets</h2>
+
+    <div class="sets-list">
+        {% for set in sets %}
+        <div class="set-card">
+            <h3>{{ set.name }}</h3>
+            <p>{{ set.count }} cards</p>
+
+            <div class="status-indicator 
+                {% if set.avg_score >= 0.8 %}green
+                {% elif set.avg_score >= 0.5 %}amber
+                {% else %}red{% endif %}">
+            </div>
+
+            <p class="conf-text">
+                {% if set.avg_score >= 0.8 %}
+                    High Confidence (Mastered)
+                {% elif set.avg_score >= 0.5 %}
+                    Medium Confidence (Reviewing)
+                {% else %}
+                    Low Confidence (Needs Review)
+                {% endif %}
+            </p>
+
+            <div class="card-actions" style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+                <a href="{{ url_for('study_flashcards', set_id=set._id) }}" class="btn-review">Study Mode</a>
+                <a href="{{ url_for('quiz_flashcards', set_id=set._id) }}" class="btn-review">Quiz Mode</a>
+                <a href="{{ url_for('mastery_mode', set_id=set._id) }}" class="btn-review">Mastery Mode</a>
+                <a href="{{ url_for('set_mastery_analytics', set_id=set._id) }}" class="btn-analytics" style="text-decoration: none; font-size: 0.8rem; color: #7B2CBF; font-weight: bold;">View Mastery Details →</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

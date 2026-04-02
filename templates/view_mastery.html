@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mastery_analytics.css') }}">
+
+<div class="analytics-container">
+    <div class="main-content">
+        <h1 style="color: white; margin-bottom: 40px; font-size: 2.5rem;">Your Flashcard Sets</h1>
+        
+        <header class="analytics-header">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Filter by Confidence:</label>
+                    <select id="statusFilter" onchange="filterCards()">
+                        <option value="all">All</option>
+                        <option value="green">Green</option>
+                        <option value="amber">Amber</option>
+                        <option value="red">Red</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Sort by:</label>
+                    <select>
+                        <option>Date Created</option>
+                        <option>Mastery Score</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Search:</label>
+                <input type="text" placeholder="Search cards..." id="searchBox" style="width: 280px;">
+            </div>
+        </header>
+
+        <div class="cards-grid" id="cardsGrid">
+            {% for card in cards %}
+            <div class="mastery-mini-card {{ card.status }}" data-status="{{ card.status }}">
+                <div style="text-align: right; font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">✎ Edit</div>
+                <h3 style="margin: 0 0 10px 0;">{{ card.question }}</h3>
+                <p style="font-size: 0.85rem; color: #777;">24 cards • Last studied: Today</p>
+                
+                <div class="card-icon" style="background: 
+                    {% if card.status == 'green' %} var(--green) 
+                    {% elif card.status == 'amber' %} var(--amber) 
+                    {% else %} var(--red) {% endif %}; 
+                    width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 20px auto; color: white; font-size: 1.5rem;">
+                    {% if card.status == 'green' %} ✓ {% elif card.status == 'amber' %} ? {% else %} ✕ {% endif %}
+                </div>
+                
+                <p style="font-weight: bold; margin-bottom: 20px;">
+                    {{ card.status|capitalize }} Confidence <br>
+                    <span style="font-weight: normal; color: #666;">({{ (card.mastery_score|default(0) * 100)|int }}%)</span>
+                </p>
+                
+                <button class="study-btn" style="background: white; border: 1.5px solid var(--purple-main); color: var(--purple-main); padding: 10px 25px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer;">Study Now</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <aside class="analytics-sidebar">
+        <h3 style="margin-top: 0;">Set Progress</h3>
+        <div class="progress-circle" style="--p:{{ stats.percent }};">
+            <span>{{ stats.percent }}%</span>
+        </div>
+        <p style="text-align: center; font-weight: 600; color: #555;">Mastered</p>
+
+        <div style="margin-top: 30px;">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="background: var(--green); width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 10px;"></span>
+                Mastered: {{ stats.green }}
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="background: var(--amber); width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 10px;"></span>
+                Reviewing: {{ stats.amber }}
+            </div>
+            <div style="display: flex; align-items: center;">
+                <span style="background: var(--red); width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 10px;"></span>
+                New: {{ stats.red }}
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+            <h4 style="margin: 0 0 10px 0;">Recent Activity</h4>
+            <p style="font-size: 0.85rem; color: #666; line-height: 1.4;">Completed "Psychology Quiz 1" - Score: 85%</p>
+        </div>
+    </aside>
+</div>
+{% endblock %}

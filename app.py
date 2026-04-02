@@ -152,6 +152,7 @@ def view_set(set_id):
 
 
 # ------------------ Upload Notes (AJAX) ------------------
+# ------------------ Upload Notes (AJAX) ------------------
 @app.route('/upload_notes_ajax', methods=['POST'])
 def upload_notes_ajax():
     try:
@@ -159,6 +160,10 @@ def upload_notes_ajax():
             return jsonify({"ok": False, "error": "No file uploaded"}), 400
 
         file = request.files['notes_file']
+        
+        # --- NEW: Get the language choice from the frontend ---
+        target_lang = request.form.get('target_lang', 'en') 
+
         if file.filename == '':
             return jsonify({"ok": False, "error": "No file selected"}), 400
 
@@ -167,22 +172,25 @@ def upload_notes_ajax():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
-            # Generate flashcards via NLP
-            flashcards_generated = generate_flashcards_from_file(filepath)
+            # --- UPDATED: Pass the language to your NLP function ---
+            # Ensure your generate_flashcards_from_file function in nlp.py 
+            # is updated to accept a 'language' argument!
+            flashcards_generated = generate_flashcards_from_file(filepath, language=target_lang)
 
             if not flashcards_generated:
                 return jsonify({"ok": False, "error": "AI could not find enough text."}), 200
 
-            # UPDATED: Store image_url and score in session
+            # Store in session, including the language used
             session['temp_generated'] = [
-            {
-                "question": c.get("question",""), 
-                "answer": c.get("answer",""), 
-                "score": c.get("score", 0),
-                "visual_explanation": c.get("visual_explanation"),
-                "image_url": c.get("image_url")
-            }
-            for c in flashcards_generated
+                {
+                    "question": c.get("question",""), 
+                    "answer": c.get("answer",""), 
+                    "score": c.get("score", 0),
+                    "visual_explanation": c.get("visual_explanation"),
+                    "image_url": c.get("image_url"),
+                    "language": target_lang  # NEW: keep track of the language
+                }
+                for c in flashcards_generated
             ]
             session['temp_filename'] = filename
 
@@ -247,7 +255,7 @@ def preview_generated_flashcards(filename):
     return render_template('preview_generated.html', flashcards=generated)
 
 
-# ------------------ Save Generated Flashcards (Updated) ------------------
+# ------------------ Save Generated Flashcards ------------------
 @app.route('/save-generated-flashcards', methods=['POST'])
 def save_generated_flashcards():
     if 'user_id' not in session:
@@ -257,30 +265,32 @@ def save_generated_flashcards():
     set_name = request.form.get('set_name')
     temp_cards = session.get('temp_generated', [])
 
-    # 1. Handle Set Creation/Retrieval
     existing_set = flashcardsets.find_one({'user_id': user_id, 'name': set_name})
     
     if existing_set:
         set_id = existing_set['_id']
-        # --- FIX: Clear existing cards so they don't duplicate to 182+ ---
         flashcards.delete_many({'set_id': set_id})
     else:
+        # Get the language from the first card in temp_cards to set the whole "Set" language
+        set_lang = temp_cards[0].get('language', 'en') if temp_cards else 'en'
+        
         set_id = flashcardsets.insert_one({
             'user_id': user_id,
             'name': set_name,
+            'language': set_lang, # NEW: Save the set's primary language
             'created_at': datetime.utcnow()
         }).inserted_id
 
-    # 2. Save Cards
     for card in temp_cards:
         flashcards.insert_one({
             'user_id': user_id,
             'set_id': set_id,
             'question': card.get('question'),
             'answer': card.get('answer'),
+            'language': card.get('language', 'en'), # NEW: Save per card
             'visual_explanation': card.get('visual_explanation'),
             'score': card.get('score', 0),
-            'status': 'red', # Initialize status
+            'status': 'red',
             'attempts': 0,
             'correct_attempts': 0,
             'created_at': datetime.utcnow()
@@ -289,7 +299,7 @@ def save_generated_flashcards():
     session.pop('temp_generated', None)
     session.pop('temp_filename', None)
 
-    flash('Set saved! Moving to Quiz Mode.', 'success')
+    flash(f'Set saved in {set_lang.upper()}!', 'success')
     return redirect(url_for('quiz_flashcards', set_id=str(set_id)))
 
 @app.route("/study/<set_id>")
@@ -475,6 +485,35 @@ def check_mastery_answer():
         "streak": streak,
         "xp": xp
     })
+
+@app.route("/set/<set_id>/mastery-analytics")
+def set_mastery_analytics(set_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = ObjectId(session["user_id"])
+    set_data = flashcardsets.find_one({"_id": ObjectId(set_id), "user_id": user_id})
+    cards = list(flashcards.find({"set_id": ObjectId(set_id)}))
+
+    # Stats for the sidebar
+    total = len(cards)
+    green = sum(1 for c in cards if c.get('status') == 'green')
+    amber = sum(1 for c in cards if c.get('status') == 'amber')
+    red = sum(1 for c in cards if c.get('status') == 'red' or not c.get('status'))
+    
+    mastery_percent = int((green / total) * 100) if total > 0 else 0
+
+    # Clean cards for the UI
+    for c in cards:
+        c['_id'] = str(c['_id'])
+        c['status'] = c.get('status', 'red')
+
+    return render_template(
+        "view_mastery.html",
+        set_data=set_data,
+        cards=cards,
+        stats={'total': total, 'green': green, 'amber': amber, 'red': red, 'percent': mastery_percent}
+    )
 
 # ------------------ File Utility ------------------
 def allowed_file(filename):

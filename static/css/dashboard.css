@@ -196,3 +196,22 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(67, 97, 238, 0.3);
 }
+
+/* Add to dashboard.css for that extra oomph */
+.language-selector {
+    background: rgba(93, 42, 157, 0.05);
+    padding: 10px;
+    border-radius: 12px;
+    display: inline-block;
+    border: 1px dashed #5d2a9d;
+}
+
+.language-selector select {
+    border: none;
+    background: white;
+    color: #5d2a9d;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}

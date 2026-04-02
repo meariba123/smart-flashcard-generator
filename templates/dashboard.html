@@ -44,7 +44,15 @@
     <h3>Start a New Study Set</h3> 
     <p>Drag and drop your file here, or click to browse.</p> 
     
-    <input type="file" name="notes_file" id="fileInput" hidden onchange="handleFileUpload()"> 
+    <div class="language-selector" style="margin-bottom: 15px;">
+        <label for="targetLanguage" style="font-size: 0.9rem; color: #5d2a9d; font-weight: 600;">Translate to:</label>
+        <select id="targetLanguage" style="padding: 5px; border-radius: 8px; border: 1px solid #ddd; outline: none; margin-left: 10px;">
+            <option value="en">English (Default)</option>
+            <option value="es">Spanish</option>
+        </select>
+    </div>
+    
+    <input type="file" name="notes_file" id="fileInput" hidden> 
     <button type="button" onclick="document.getElementById('fileInput').click()"> Choose file </button> 
     <span id="fileName"></span>
 

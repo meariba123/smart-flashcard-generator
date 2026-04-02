@@ -1,5 +1,3 @@
-// dashboard.js
-
 document.getElementById('fileInput').onchange = function() {
     const file = this.files[0];
     const fileNameDisplay = document.getElementById('fileName');
@@ -8,7 +6,7 @@ document.getElementById('fileInput').onchange = function() {
 
     // 1. UI Feedback: Show filename and a loading state
     fileNameDisplay.textContent = "Processing: " + file.name;
-    fileNameDisplay.style.color = "#5d2a9d"; // Matching your purple theme
+    fileNameDisplay.style.color = "#5d2a9d"; //matching your purple theme
     
     const formData = new FormData();
     formData.append('notes_file', file);

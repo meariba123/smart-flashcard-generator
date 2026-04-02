@@ -1,0 +1,141 @@
+:root {
+    --purple-main: #8e44ad;
+    --purple-light: #a29bfe;
+    --yellow-light: #ffeaa7;
+    --green: #4caf50;
+    --amber: #ffb74d;
+    --red: #ef5350;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f1ff; /* Fallback */
+    /* The "Swoop" Background Effect */
+    background: 
+        radial-gradient(circle at top left, var(--yellow-light) 0%, transparent 40%),
+        radial-gradient(circle at bottom right, var(--purple-main) 0%, transparent 50%),
+        linear-gradient(135deg, #dfd1f1 0%, #f7e8a4 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Creating the large background "swoop" shape */
+body::before {
+    content: "";
+    position: fixed;
+    top: -10%;
+    left: -10%;
+    width: 120%;
+    height: 40%;
+    background: var(--purple-main);
+    border-radius: 0 0 50% 50%;
+    z-index: -1;
+    opacity: 0.8;
+}
+
+.analytics-container {
+    display: flex;
+    max-width: 1300px; /* Increased width to reduce "empty" side space */
+    margin: 60px auto;
+    padding: 0 40px;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.main-content {
+    flex: 3;
+}
+
+/* Fixed Header Alignment */
+.analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Align bottom edges of text and inputs */
+    margin-bottom: 40px;
+    padding-bottom: 10px;
+}
+
+.controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.control-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444;
+}
+
+select, input[type="text"] {
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Card Styling */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.mastery-mini-card {
+    background: white;
+    border-radius: 24px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Sidebar Styling (Taller/Lined up) */
+.analytics-sidebar {
+    flex: 1;
+    background: white;
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 100px; /* Sticks to top when scrolling */
+}  
+
+/* Progress Circle */
+.progress-circle {
+    width: 140px;
+    height: 140px;
+    margin: 20px auto;
+    border-radius: 50%;
+    background: conic-gradient(var(--purple-main) calc(var(--p) * 1%), #eee 0);
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+
+.progress-circle::after {
+    content: "";
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    background: white;
+    border-radius: 50%;
+}
+
+.progress-circle span {
+    position: relative;
+    z-index: 1;
+    font-size: 2rem;
+    font-weight: bold;
+}
