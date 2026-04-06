@@ -264,30 +264,35 @@ def save_generated_flashcards():
     user_id = ObjectId(session['user_id'])
     set_name = request.form.get('set_name')
     temp_cards = session.get('temp_generated', [])
+    
+    # 1. Determine the language FIRST so it is available for both branches
+    # Default to 'en' if nothing is found
+    set_lang = temp_cards[0].get('language', 'en') if temp_cards else 'en'
 
     existing_set = flashcardsets.find_one({'user_id': user_id, 'name': set_name})
     
     if existing_set:
         set_id = existing_set['_id']
+        # Use the language already saved in the existing set if available
+        set_lang = existing_set.get('language', set_lang)
         flashcards.delete_many({'set_id': set_id})
     else:
-        # Get the language from the first card in temp_cards to set the whole "Set" language
-        set_lang = temp_cards[0].get('language', 'en') if temp_cards else 'en'
-        
+        # Create a new set
         set_id = flashcardsets.insert_one({
             'user_id': user_id,
             'name': set_name,
-            'language': set_lang, # NEW: Save the set's primary language
+            'language': set_lang, 
             'created_at': datetime.utcnow()
         }).inserted_id
 
+    # 2. Save the individual cards
     for card in temp_cards:
         flashcards.insert_one({
             'user_id': user_id,
             'set_id': set_id,
             'question': card.get('question'),
             'answer': card.get('answer'),
-            'language': card.get('language', 'en'), # NEW: Save per card
+            'language': card.get('language', set_lang), 
             'visual_explanation': card.get('visual_explanation'),
             'score': card.get('score', 0),
             'status': 'red',
@@ -299,6 +304,7 @@ def save_generated_flashcards():
     session.pop('temp_generated', None)
     session.pop('temp_filename', None)
 
+    # 3. Now set_lang is guaranteed to exist
     flash(f'Set saved in {set_lang.upper()}!', 'success')
     return redirect(url_for('quiz_flashcards', set_id=str(set_id)))
 
@@ -315,13 +321,22 @@ def study_flashcards(set_id):
 
     cards = list(flashcards.find({"set_id": ObjectId(set_id), "user_id": user_id}))
     
-    # Calculate progress based on mastery score or green status
+    # --- FIX START ---
+    # Convert the set ID
+    flashcard_set["_id"] = str(flashcard_set["_id"])
+    
+    for card in cards:
+        card["_id"] = str(card["_id"])
+        # Crucial: Convert the set_id inside the card too!
+        if "set_id" in card:
+            card["set_id"] = str(card["set_id"])
+        if "user_id" in card:
+            card["user_id"] = str(card["user_id"])
+    # --- FIX END ---
+
     total_cards = len(cards)
     mastered_count = sum(1 for c in cards if c.get('status') == 'green' or c.get('mastery_score', 0) >= 0.8)
     percent = int((mastered_count / total_cards) * 100) if total_cards > 0 else 0
-
-    for card in cards:
-        card["_id"] = str(card["_id"])
 
     return render_template(
         "study_flashcards.html",
@@ -514,6 +529,29 @@ def set_mastery_analytics(set_id):
         cards=cards,
         stats={'total': total, 'green': green, 'amber': amber, 'red': red, 'percent': mastery_percent}
     )
+
+@app.route("/edit_flashcard", methods=["POST"])
+def edit_flashcard():
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    
+    data = request.json
+    card_id = data.get("card_id")
+    new_question = data.get("question")
+    new_answer = data.get("answer")
+
+    if not card_id or not new_question or not new_answer:
+        return jsonify({"success": False, "error": "Missing data"}), 400
+
+    # Ensure the user only edits their own cards
+    result = db.flashcards.update_one(
+        {"_id": ObjectId(card_id), "user_id": ObjectId(session["user_id"])},
+        {"$set": {"question": new_question, "answer": new_answer}}
+    )
+
+    if result.modified_count > 0:
+        return jsonify({"success": True})
+    return jsonify({"success": False, "error": "Update failed or no changes made"})
 
 # ------------------ File Utility ------------------
 def allowed_file(filename):

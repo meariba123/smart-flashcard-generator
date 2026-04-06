@@ -1,0 +1,154 @@
+.sets-page-container {
+    padding: 60px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.sets-header {
+    text-align: left;
+    margin-bottom: 50px;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #2D3436;
+    margin: 0;
+}
+
+.section-subtitle {
+    color: #343b3e;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
+
+/* Grid Layout */
+.sets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 30px;
+}
+
+/* Glassmorphism Card */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(123, 44, 191, 0.08);
+    padding: 30px;
+    transition: all 0.3s ease;
+}
+
+.set-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(123, 44, 191, 0.15);
+}
+
+/* Card Header */
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.folder-icon {
+    background: #F3E8FF;
+    color: #7B2CBF;
+    padding: 12px;
+    border-radius: 14px;
+}
+
+.set-meta h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #2D3436;
+}
+
+.set-meta span {
+    font-size: 0.85rem;
+    color: #636E72;
+    font-weight: 600;
+}
+
+/* Mastery Progress Box */
+.mastery-status-box {
+    padding: 15px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+}
+
+.status-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.status-bar-bg {
+    height: 8px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.status-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+}
+
+/* Colors for status */
+.status-high { background: rgba(46, 204, 113, 0.1); color: #27ae60; }
+.status-high .status-bar-fill { background: #2ecc71; }
+
+.status-med { background: rgba(243, 156, 18, 0.1); color: #d35400; }
+.status-med .status-bar-fill { background: #f39c12; }
+
+.status-low { background: rgba(231, 76, 60, 0.1); color: #c0392b; }
+.status-low .status-bar-fill { background: #e74c3c; }
+
+/* Actions Grid */
+.card-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 5px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #7B2CBF;
+    background: #F8F4FF;
+    transition: 0.2s;
+}
+
+.action-btn:hover {
+    background: #7B2CBF;
+    color: white;
+}
+
+.action-btn i { width: 18px; height: 18px; }
+
+.analytics-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-decoration: none;
+    color: #7B2CBF;
+    font-size: 0.85rem;
+    font-weight: 800;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 15px;
+}

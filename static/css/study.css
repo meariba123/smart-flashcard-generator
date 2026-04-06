@@ -151,3 +151,19 @@ body.gradient-bg {
     max-width: 400px;
     width: 90%;
 }
+
+.editable-title {
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    display: inline-block;
+}
+.editable-title:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+.editable-title:focus {
+    outline: 2px solid #7B2CBF;
+    background: white;
+    cursor: text;
+}

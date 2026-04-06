@@ -1,49 +1,66 @@
 {% extends "layout.html" %}
 {% block content %}
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/view_sets.css') }}">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<div class="sets-page-container">
+    <header class="sets-header">
+        <h1 class="section-title">Your Flashcard Library</h1>
+        <p class="section-subtitle">Track your mastery and continue your learning journey.</p>
+    </header>
 
-<div class="dashboard-container">
-    <div class="nav-pill-container">
-        <div class="nav-pill">
-            <a href="{{ url_for('dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('view_sets') }}" class="active">View All Sets</a> 
-            <a href="{{ url_for('logout') }}">Logout</a>
-        </div>
-    </div>
-
-    <h2 class="section-title">Your Flashcard Sets</h2>
-
-    <div class="sets-list">
+    <div class="sets-grid">
         {% for set in sets %}
-        <div class="set-card">
-            <h3>{{ set.name }}</h3>
-            <p>{{ set.count }} cards</p>
-
-            <div class="status-indicator 
-                {% if set.avg_score >= 0.8 %}green
-                {% elif set.avg_score >= 0.5 %}amber
-                {% else %}red{% endif %}">
+        <div class="set-card glass-effect">
+            <div class="card-header">
+                <div class="folder-icon">
+                    <i data-lucide="folder"></i>
+                </div>
+                <div class="set-meta">
+                    <h3>{{ set.name }}</h3>
+                    <span>{{ set.count }} cards</span>
+                </div>
             </div>
 
-            <p class="conf-text">
-                {% if set.avg_score >= 0.8 %}
-                    High Confidence (Mastered)
-                {% elif set.avg_score >= 0.5 %}
-                    Medium Confidence (Reviewing)
-                {% else %}
-                    Low Confidence (Needs Review)
-                {% endif %}
-            </p>
-
-            <div class="card-actions" style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
-                <a href="{{ url_for('study_flashcards', set_id=set._id) }}" class="btn-review">Study Mode</a>
-                <a href="{{ url_for('quiz_flashcards', set_id=set._id) }}" class="btn-review">Quiz Mode</a>
-                <a href="{{ url_for('mastery_mode', set_id=set._id) }}" class="btn-review">Mastery Mode</a>
-                <a href="{{ url_for('set_mastery_analytics', set_id=set._id) }}" class="btn-analytics" style="text-decoration: none; font-size: 0.8rem; color: #7B2CBF; font-weight: bold;">View Mastery Details →</a>
+            <div class="mastery-status-box 
+                {% if set.avg_score >= 0.8 %}status-high
+                {% elif set.avg_score >= 0.5 %}status-med
+                {% else %}status-low{% endif %}">
+                
+                <div class="status-top">
+                    <span class="status-label">
+                        {% if set.avg_score >= 0.8 %} Mastered
+                        {% elif set.avg_score >= 0.5 %} Learning
+                        {% else %} Needs Review {% endif %}
+                    </span>
+                    <span class="status-percent">{{ (set.avg_score * 100)|int }}%</span>
+                </div>
+                <div class="status-bar-bg">
+                    <div class="status-bar-fill" style="width: {{ (set.avg_score * 100)|int }}%;"></div>
+                </div>
             </div>
+
+            <div class="card-actions-grid">
+                <a href="{{ url_for('study_flashcards', set_id=set._id) }}" class="action-btn">
+                    <i data-lucide="book-open"></i> Study
+                </a>
+                <a href="{{ url_for('quiz_flashcards', set_id=set._id) }}" class="action-btn">
+                    <i data-lucide="zap"></i> Quiz
+                </a>
+                <a href="{{ url_for('mastery_mode', set_id=set._id) }}" class="action-btn">
+                    <i data-lucide="award"></i> Mastery
+                </a>
+            </div>
+
+            <a href="{{ url_for('set_mastery_analytics', set_id=set._id) }}" class="analytics-link">
+                Detailed Analytics <i data-lucide="arrow-right"></i>
+            </a>
         </div>
         {% endfor %}
     </div>
 </div>
+
+<script>
+    lucide.createIcons();
+</script>
 {% endblock %}

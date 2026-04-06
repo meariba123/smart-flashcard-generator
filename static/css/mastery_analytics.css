@@ -1,141 +1,115 @@
-:root {
-    --purple-main: #8e44ad;
-    --purple-light: #a29bfe;
-    --yellow-light: #ffeaa7;
-    --green: #4caf50;
-    --amber: #ffb74d;
-    --red: #ef5350;
-}
+/* Mastery Analytics - 100% Level Polish */
 
+/* 1. Global Reset & Professional Background */
 body {
+    background: linear-gradient(135deg, #fce7f3 0%, #e0e7ff 100%) no-repeat center center fixed;
+    background-size: cover;
     margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f1ff; /* Fallback */
-    /* The "Swoop" Background Effect */
-    background: 
-        radial-gradient(circle at top left, var(--yellow-light) 0%, transparent 40%),
-        radial-gradient(circle at bottom right, var(--purple-main) 0%, transparent 50%),
-        linear-gradient(135deg, #dfd1f1 0%, #f7e8a4 100%);
-    background-attachment: fixed;
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-/* Creating the large background "swoop" shape */
-body::before {
-    content: "";
-    position: fixed;
-    top: -10%;
-    left: -10%;
-    width: 120%;
-    height: 40%;
-    background: var(--purple-main);
-    border-radius: 0 0 50% 50%;
-    z-index: -1;
-    opacity: 0.8;
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
 }
 
 .analytics-container {
-    display: flex;
-    max-width: 1300px; /* Increased width to reduce "empty" side space */
-    margin: 60px auto;
+    max-width: 1400px;
+    margin: 40px auto;
     padding: 0 40px;
-    gap: 30px;
-    align-items: flex-start;
 }
 
-.main-content {
-    flex: 3;
-}
-
-/* Fixed Header Alignment */
+/* 2. Header Polish */
 .analytics-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end; /* Align bottom edges of text and inputs */
+    align-items: flex-end;
     margin-bottom: 40px;
-    padding-bottom: 10px;
 }
 
-.controls {
-    display: flex;
-    gap: 20px;
-    align-items: center;
+.header-text h1 { font-size: 2.2rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+.header-text p { color: #64748b; margin-top: 5px; }
+
+.header-actions { display: flex; gap: 15px; }
+
+.search-box { position: relative; }
+.search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 18px; }
+.search-box input {
+    padding: 12px 15px 12px 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.1);
+    width: 280px;
+    background: white;
 }
 
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.control-group label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #444;
-}
-
-select, input[type="text"] {
-    padding: 10px 15px;
-    border-radius: 10px;
+.filter-dropdown {
+    padding: 0 15px;
+    border-radius: 12px;
     border: 1px solid rgba(0,0,0,0.1);
     background: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    font-weight: 600;
 }
 
-/* Card Styling */
-.cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
+/* 3. The Dashboard Layout (The Fix for 'What on Earth') */
+.analytics-layout {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
 }
 
-.mastery-mini-card {
-    background: white;
-    border-radius: 24px;
-    padding: 25px;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    transition: transform 0.2s;
-    border: 1px solid rgba(255,255,255,0.3);
-}
-
-/* Sidebar Styling (Taller/Lined up) */
-.analytics-sidebar {
-    flex: 1;
-    background: white;
+/* 4. Sidebar: Fixed Width & Sticky */
+.stats-sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 40px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 24px;
     padding: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    position: sticky;
-    top: 100px; /* Sticks to top when scrolling */
-}  
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
 
-/* Progress Circle */
-.progress-circle {
-    width: 140px;
-    height: 140px;
-    margin: 20px auto;
-    border-radius: 50%;
-    background: conic-gradient(var(--purple-main) calc(var(--p) * 1%), #eee 0);
+/* 5. Main Card Grid */
+.mastery-grid-wrapper {
+    flex-grow: 1;
+}
+
+.mastery-grid {
     display: grid;
-    place-items: center;
-    position: relative;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
 }
 
-.progress-circle::after {
-    content: "";
-    position: absolute;
-    width: 110px;
-    height: 110px;
+/* 6. Card Polish */
+.concept-card {
     background: white;
-    border-radius: 50%;
+    border-radius: 20px;
+    padding: 0;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    height: 100%;
 }
 
-.progress-circle span {
-    position: relative;
-    z-index: 1;
-    font-size: 2rem;
-    font-weight: bold;
+.concept-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
 }
+
+.card-header { padding: 20px 20px 10px; display: flex; justify-content: space-between; }
+.card-body { padding: 0 20px 20px; flex-grow: 1; }
+.card-body h4 { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; min-height: 3em; }
+
+.card-link {
+    padding: 15px 20px;
+    border-top: 1px solid #f1f5f9;
+    text-decoration: none;
+    color: #6366f1;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+}
+
+.status-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
+.green .status-badge { background: #dcfce7; color: #166534; }
+.amber .status-badge { background: #fef3c7; color: #92400e; }
+.red .status-badge { background: #fee2e2; color: #991b1b; }

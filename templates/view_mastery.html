@@ -1,90 +1,100 @@
 {% extends "layout.html" %}
 {% block content %}
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/mastery_analytics.css') }}">
 
 <div class="analytics-container">
-    <div class="main-content">
-        <h1 style="color: white; margin-bottom: 40px; font-size: 2.5rem;">Your Flashcard Sets</h1>
-        
-        <header class="analytics-header">
-            <div class="controls">
-                <div class="control-group">
-                    <label>Filter by Confidence:</label>
-                    <select id="statusFilter" onchange="filterCards()">
-                        <option value="all">All</option>
-                        <option value="green">Green</option>
-                        <option value="amber">Amber</option>
-                        <option value="red">Red</option>
-                    </select>
-                </div>
-                
-                <div class="control-group">
-                    <label>Sort by:</label>
-                    <select>
-                        <option>Date Created</option>
-                        <option>Mastery Score</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <label>Search:</label>
-                <input type="text" placeholder="Search cards..." id="searchBox" style="width: 280px;">
-            </div>
-        </header>
-
-        <div class="cards-grid" id="cardsGrid">
-            {% for card in cards %}
-            <div class="mastery-mini-card {{ card.status }}" data-status="{{ card.status }}">
-                <div style="text-align: right; font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">✎ Edit</div>
-                <h3 style="margin: 0 0 10px 0;">{{ card.question }}</h3>
-                <p style="font-size: 0.85rem; color: #777;">24 cards • Last studied: Today</p>
-                
-                <div class="card-icon" style="background: 
-                    {% if card.status == 'green' %} var(--green) 
-                    {% elif card.status == 'amber' %} var(--amber) 
-                    {% else %} var(--red) {% endif %}; 
-                    width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 20px auto; color: white; font-size: 1.5rem;">
-                    {% if card.status == 'green' %} ✓ {% elif card.status == 'amber' %} ? {% else %} ✕ {% endif %}
-                </div>
-                
-                <p style="font-weight: bold; margin-bottom: 20px;">
-                    {{ card.status|capitalize }} Confidence <br>
-                    <span style="font-weight: normal; color: #666;">({{ (card.mastery_score|default(0) * 100)|int }}%)</span>
-                </p>
-                
-                <button class="study-btn" style="background: white; border: 1.5px solid var(--purple-main); color: var(--purple-main); padding: 10px 25px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer;">Study Now</button>
-            </div>
-            {% endfor %}
+    <header class="analytics-header">
+        <div class="header-text">
+            <h1>Knowledge Analytics</h1>
+            <p>Real-time retention and mastery tracking</p>
         </div>
+        <div class="header-actions">
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="masterySearch" placeholder="Search concepts..." onkeyup="filterAnalytics()">
+            </div>
+            <select id="statusFilter" class="filter-dropdown" onchange="filterAnalytics()">
+                <option value="all">All Status</option>
+                <option value="green">Mastered</option>
+                <option value="amber">Learning</option>
+                <option value="red">Struggling</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="analytics-layout">
+        <aside class="stats-sidebar">
+            <h3 style="margin-top:0;">Mastery Overview</h3>
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="position: relative; display: inline-block;">
+                    <svg width="100" height="100">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f5f9" stroke-width="8"/>
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#6366f1" stroke-width="8" 
+                                stroke-dasharray="283" stroke-dashoffset="{{ 283 - (stats.percent / 100 * 283) }}" 
+                                stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: center;"/>
+                    </svg>
+                    <div style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.2rem;">
+                        {{ stats.percent }}%
+                    </div>
+                </div>
+            </div>
+            <div class="stat-list" style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; justify-content:space-between;"><span>● Mastered</span><strong>{{ stats.green }}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>● Learning</span><strong>{{ stats.amber }}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>● Struggling</span><strong>{{ stats.red }}</strong></div>
+            </div>
+        </aside>
+
+        <main class="mastery-grid-wrapper">
+            <div class="mastery-grid" id="cardGrid">
+                {% for card in cards %}
+                <div class="concept-card {{ card.status }}" data-status="{{ card.status }}" data-text="{{ card.question|lower }}">
+                    <div class="card-header">
+                        <span class="status-badge">{{ card.status|upper }}</span>
+                        <button onclick='openEditModal({{ card._id|tojson }}, {{ card.question|tojson }}, {{ card.answer|tojson }})' style="background:none; border:none; cursor:pointer; color:#94a3b8;">
+                            <i data-lucide="edit-2" style="width:18px;"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <h4>{{ card.question }}</h4>
+                        <div style="height:6px; background:#f1f5f9; border-radius:10px; overflow:hidden;">
+                            <div style="height:100%; background:#6366f1; width: {{ (card.mastery_score * 100)|int }}%;"></div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('study_flashcards', set_id=set_data._id) }}" class="card-link">
+                        Study Concept <i data-lucide="arrow-right" style="width:18px;"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="noResults" style="display:none; text-align:center; padding:50px;">
+                <p style="color:#64748b;">No matching concepts found.</p>
+            </div>
+        </main>
     </div>
-
-    <aside class="analytics-sidebar">
-        <h3 style="margin-top: 0;">Set Progress</h3>
-        <div class="progress-circle" style="--p:{{ stats.percent }};">
-            <span>{{ stats.percent }}%</span>
-        </div>
-        <p style="text-align: center; font-weight: 600; color: #555;">Mastered</p>
-
-        <div style="margin-top: 30px;">
-            <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                <span style="background: var(--green); width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 10px;"></span>
-                Mastered: {{ stats.green }}
-            </div>
-            <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                <span style="background: var(--amber); width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 10px;"></span>
-                Reviewing: {{ stats.amber }}
-            </div>
-            <div style="display: flex; align-items: center;">
-                <span style="background: var(--red); width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 10px;"></span>
-                New: {{ stats.red }}
-            </div>
-        </div>
-
-        <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-            <h4 style="margin: 0 0 10px 0;">Recent Activity</h4>
-            <p style="font-size: 0.85rem; color: #666; line-height: 1.4;">Completed "Psychology Quiz 1" - Score: 85%</p>
-        </div>
-    </aside>
 </div>
+
+<script>
+    lucide.createIcons();
+
+    function filterAnalytics() {
+        const query = document.getElementById('masterySearch').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const cards = document.querySelectorAll('.concept-card');
+        let count = 0;
+
+        cards.forEach(card => {
+            const matchesText = card.getAttribute('data-text').includes(query);
+            const matchesStatus = (status === 'all' || card.getAttribute('data-status') === status);
+            if (matchesText && matchesStatus) {
+                card.style.display = "flex";
+                count++;
+            } else {
+                card.style.display = "none";
+            }
+        });
+        document.getElementById('noResults').style.display = count === 0 ? "block" : "none";
+    }
+</script>
 {% endblock %}

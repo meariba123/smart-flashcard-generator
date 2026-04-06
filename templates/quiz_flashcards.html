@@ -1,67 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Quiz Mode - {{ flashcard_set.name }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/quiz.css') }}">
 </head>
 <body class="gradient-bg">
     
     <div class="quiz-container">
-        <header id="quizHeader">
+        <div id="milestoneAnchor" class="milestone-popup"></div>
+
+        <header id="quizHeader" class="quiz-top-nav">
             <div class="stats-row">
-                <div class="stat-pill">✨ XP: <span id="xp">0</span></div>
-                <div class="stat-pill">🔥 Streak: <span id="streak">0</span></div>
+                <div id="xpPill" class="stat-pill">✨ XP: <span id="xp">0</span></div>
+                <div id="streakPill" class="stat-pill">🔥 <span id="streak">0</span></div>
             </div>
-            <div id="masteryPills" style="margin-top: 10px; margin-bottom: 15px; font-size: 0.85rem; font-weight: 600;">
-                <span style="color:#e54e3d">● Red: <span id="count-red">0</span></span> | 
-                <span style="color:#f39c12">● Amber: <span id="count-amber">0</span></span> | 
-                <span style="color:#2ecc71">● Green: <span id="count-green">0</span></span>
-            </div>
+            
+            <a href="{{ url_for('dashboard') }}" class="btn-exit-quiz">Exit Quiz</a>
         </header>
 
-        <div id="quizInterface" class="quiz-card">
+        <div id="quizInterface" class="quiz-card main-card-animate">
             <div class="progress-mini">Question <span id="currentNum">1</span> of {{ flashcards|length }}</div>
-            <h3 id="question">Loading question...</h3>
-            <textarea id="userAnswer" placeholder="Type your answer here..."></textarea>
-            <button class="btn-submit" onclick="submitAnswer()">Submit Answer</button>
-            <div id="feedback" style="margin-top:15px; font-weight:600; display:none;"></div>
+            
+            <div class="question-area">
+                <h3 id="question">Loading question...</h3>
+            </div>
+
+            <div class="input-area">
+                <textarea id="userAnswer" placeholder="Type your answer here..." spellcheck="false"></textarea>
+                <button class="btn-submit" onclick="submitAnswer()">Submit Answer</button>
+            </div>
+
+            <div id="feedback" class="feedback-toast" style="display:none;"></div>
         </div>
 
-        <div id="resultScreen" style="display:none; padding: 40px 20px; text-align: center;">
-            <div class="confetti-icon" style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
-            <h2 style="color: #2D3436; font-size: 2rem; margin-bottom: 5px;">Session Complete!</h2>
-            <p style="color: #636e72; margin-bottom: 30px;">Here is your mastery breakdown</p>
+        <div id="resultScreen" class="result-card" style="display:none;">
+            <div class="confetti-icon">🏆</div>
+            <h2>Session Complete!</h2>
+            <p>Here is your mastery breakdown</p>
             
-            <div style="display: flex; align-items: center; justify-content: center; gap: 40px; margin-bottom: 40px; flex-wrap: wrap;">
-                <div class="donut-container" style="position: relative; width: 180px;">
+            <div class="result-stats-container">
+                <div class="donut-wrapper">
                     <svg viewBox="0 0 36 36" class="circular-chart purple">
-                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#f1f2f6" stroke-width="2.5"/>
-                        <path id="donut-segment" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#7B2CBF" stroke-width="3" stroke-linecap="round" style="transition: stroke-dasharray 1.5s ease-in-out;"/>
-                        <text x="18" y="21" class="percentage" id="donut-text" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.6rem; text-anchor: middle; font-weight: 800; fill: #2D3436;">0%</text>
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <path id="donut-segment" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <text x="18" y="21" class="percentage" id="donut-text">0%</text>
                     </svg>
                 </div>
 
-                <div style="text-align: left; min-width: 200px;">
-                    <div id="masteryBadge" style="display: inline-block; padding: 5px 15px; border-radius: 20px; background: #eee; font-size: 0.8rem; font-weight: 700; margin-bottom: 15px; text-transform: uppercase;">RANK: NOVICE</div>
-                    <div style="font-size: 0.95rem; color: #2d3436; margin-bottom: 8px;">✅ <strong id="res-mastered">0</strong> Mastered</div>
-                    <div style="font-size: 0.95rem; color: #2d3436; margin-bottom: 8px;">⏳ <strong id="res-remaining">0</strong> To Go</div>
-                    <div style="font-size: 0.95rem; color: #2d3436;">🔥 Session XP: <strong id="res-xp">0</strong></div>
+                <div class="result-details">
+                    <div id="masteryBadge" class="rank-badge">RANK: NOVICE</div>
+                    <p>✅ <strong id="res-mastered">0</strong> Mastered</p>
+                    <p>⏳ <strong id="res-remaining">0</strong> To Go</p>
+                    <p>🔥 Session XP: <strong id="res-xp">0</strong></p>
                 </div>
             </div>
 
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 30px; border: 1px solid #e9ecef;">
-                <p id="dissertation-remark" style="font-style: italic; color: #636e72; font-size: 0.9rem; margin: 0;"></p>
+            <div class="remark-box">
+                <p id="dissertation-remark"></p>
             </div>
 
-            <div class="action-buttons" style="display: flex; flex-direction: column; gap: 12px; max-width: 300px; margin: 0 auto;">
-                <a href="{{ url_for('mastery_mode', set_id=set_id) }}" class="btn-submit" style="text-decoration:none; background: #7B2CBF; box-shadow: 0 4px 15px rgba(123, 44, 191, 0.3);">Continue to Mastery Mode →</a>
-                <a href="{{ url_for('dashboard') }}" style="text-decoration:none; color: #636e72; font-weight: 600; font-size: 0.9rem; padding: 10px;">Return to Dashboard</a>
+            <div class="action-buttons">
+                <a href="{{ url_for('mastery_mode', set_id=set_id) }}" class="btn-primary">Continue to Mastery Mode</a>
+                <a href="{{ url_for('dashboard') }}" class="btn-secondary">Return to Dashboard</a>
             </div>
-        </div>
-
-        <div style="margin-top: 30px;">
-            <a href="{{ url_for('dashboard') }}" style="color: #b2bec3; text-decoration: none; font-size: 0.8rem; font-weight: 600;">Exit Quiz Session</a>
         </div>
     </div>
 
@@ -78,6 +80,7 @@
             document.getElementById("question").innerText = cards[currentIndex].question;
             document.getElementById("userAnswer").value = "";
             document.getElementById("feedback").style.display = "none";
+            document.getElementById("userAnswer").focus();
             
             const btn = document.querySelector('.btn-submit');
             btn.disabled = false;
@@ -88,10 +91,7 @@
             const btn = document.querySelector('.btn-submit');
             const answer = document.getElementById("userAnswer").value;
             
-            if (!answer.trim()) {
-                alert("Please type an answer!");
-                return;
-            }
+            if (!answer.trim()) return;
 
             btn.disabled = true;
             btn.innerText = "Analyzing...";
@@ -108,84 +108,64 @@
             .then(data => {
                 cards[currentIndex].status = data.status;
                 
-                document.getElementById("xp").innerText = data.xp;
+                const streakPill = document.getElementById("streakPill");
+                const xpPill = document.getElementById("xpPill");
+                const milestone = document.getElementById("milestoneAnchor");
+
                 document.getElementById("streak").innerText = data.streak;
-                updateMasteryPills();
+                document.getElementById("xp").innerText = data.xp;
+
+                if (data.correct) {
+                    streakPill.classList.add("streak-animate");
+                    xpPill.classList.add("xp-animate");
+                    setTimeout(() => {
+                        streakPill.classList.remove("streak-animate");
+                        xpPill.classList.remove("xp-animate");
+                    }, 600);
+
+                    if (data.streak > 0 && data.streak % 3 === 0) {
+                        milestone.innerText = data.streak >= 9 ? "🔥 UNSTOPPABLE!" : "✨ EXCELLENT!";
+                        milestone.classList.add("animate-float");
+                        setTimeout(() => milestone.classList.remove("animate-float"), 1200);
+                    }
+                }
 
                 let feedback = document.getElementById("feedback");
-                feedback.className = data.correct ? "feedback-msg correct" : "feedback-msg incorrect";
-                feedback.innerText = data.correct ? "✅ That's spot on!" : "❌ Not quite. Keep practicing!";
+                feedback.className = data.correct ? "feedback-toast correct" : "feedback-toast incorrect";
+                feedback.innerText = data.correct ? "✅ Spot on!" : "❌ Not quite right";
                 feedback.style.display = "block";
-                feedback.style.color = data.correct ? "#2ecc71" : "#e74c3c";
 
                 setTimeout(() => {
                     currentIndex++;
                     renderCard();
-                }, 1500);
-            })
-            .catch(err => {
-                console.error("Quiz Error:", err);
-                btn.disabled = false;
-                btn.innerText = "Error - Try Again";
+                }, 1200);
             });
         }
 
-        function updateMasteryPills() {
-            let counts = { red: 0, amber: 0, green: 0 };
-            cards.forEach(c => {
-                if (c.status === "green") counts.green++;
-                else if (c.status === "amber") counts.amber++;
-                else counts.red++;
-            });
-            document.getElementById("count-red").innerText = counts.red;
-            document.getElementById("count-amber").innerText = counts.amber;
-            document.getElementById("count-green").innerText = counts.green;
-            return counts;
-        }
-
-        // UPGRADED Dissertation-style Result Logic
         function showResults() {
             document.getElementById("quizInterface").style.display = "none";
             document.getElementById("quizHeader").style.display = "none";
             document.getElementById("resultScreen").style.display = "block";
 
-            let finalCounts = updateMasteryPills();
+            let masteredCount = cards.filter(c => c.status === "green").length;
             let total = cards.length;
-            let masteredPercent = Math.round((finalCounts.green / total) * 100);
+            let masteredPercent = Math.round((masteredCount / total) * 100);
 
-            // Animate Donut Chart
             setTimeout(() => {
                 document.getElementById("donut-segment").setAttribute("stroke-dasharray", `${masteredPercent}, 100`);
                 document.getElementById("donut-text").textContent = masteredPercent + "%";
             }, 300);
 
-            // Update Stats Display
-            document.getElementById("res-mastered").innerText = finalCounts.green;
-            document.getElementById("res-remaining").innerText = total - finalCounts.green;
+            document.getElementById("res-mastered").innerText = masteredCount;
+            document.getElementById("res-remaining").innerText = total - masteredCount;
             document.getElementById("res-xp").innerText = document.getElementById("xp").innerText;
 
-            // Dynamic Rank & Remark
-            let remark = "";
-            let badge = document.getElementById("masteryBadge");
-            
-            if (masteredPercent === 100) {
-                remark = "Excellent achievement. You have demonstrated comprehensive mastery over this academic module.";
-                badge.innerText = "RANK: SCHOLAR";
-                badge.style.background = "#d1fadf"; badge.style.color = "#027a48";
-            } else if (masteredPercent > 60) {
-                remark = "Strong performance. Most core concepts are internalized, though some edge cases require review.";
-                badge.innerText = "RANK: COMPETENT";
-                badge.style.background = "#fef0c7"; badge.style.color = "#b54708";
-            } else {
-                remark = "Preliminary understanding established. We recommend utilizing Mastery Mode to target specific knowledge gaps.";
-                badge.innerText = "RANK: LEARNER";
-                badge.style.background = "#fee4e2"; badge.style.color = "#b42318";
-            }
+            let remark = masteredPercent === 100 ? "Perfect score! Mastery achieved." : 
+                         masteredPercent > 60 ? "Great job! Almost there." : "Keep practicing to improve.";
             document.getElementById("dissertation-remark").innerText = remark;
         }
 
         renderCard();
-        updateMasteryPills();
     </script>
 </body>
 </html>
