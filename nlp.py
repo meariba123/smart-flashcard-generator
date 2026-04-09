@@ -9,7 +9,7 @@ import pytesseract
 from rapidfuzz import fuzz
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
-from deep_translator import GoogleTranslator  # <--- New Import
+from deep_translator import GoogleTranslator  
 
 # LOAD SPACY
 try:
