@@ -1,11 +1,10 @@
-/* static/css/mastery_mode.css */
 :root {
     --primary: #7B2CBF;
     --primary-light: #9D4EDD;
     --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     --white: #ffffff;
     --text-dark: #2D3436;
-    --text-gray: #636e72;
+    --text-gray: #171b1d;
 }
 
 body.gradient-bg {

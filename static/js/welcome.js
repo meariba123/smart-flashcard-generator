@@ -87,3 +87,16 @@ document.getElementById('showSignup').addEventListener('click', function (e) {
   document.getElementById('loginForm').classList.add('hidden');
   document.getElementById('signupForm').classList.remove('hidden');
 });
+
+const openLoginBtn = document.getElementById("openLoginBtn");
+
+openLoginBtn.addEventListener("click", (e) => {
+  e.preventDefault(); // Stop the page from jumping
+  
+  // 1. Show the modal overlay
+  modalOverlay.classList.remove("hidden");
+  
+  // 2. Hide Signup Form, Show Login Form
+  document.getElementById('signupForm').classList.add('hidden');
+  document.getElementById('loginForm').classList.remove('hidden');
+});

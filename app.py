@@ -265,25 +265,19 @@ def save_generated_flashcards():
     set_name = request.form.get('set_name')
     temp_cards = session.get('temp_generated', [])
     
-    # 1. Determine the language FIRST so it is available for both branches
-    # Default to 'en' if nothing is found
     set_lang = temp_cards[0].get('language', 'en') if temp_cards else 'en'
 
-    existing_set = flashcardsets.find_one({'user_id': user_id, 'name': set_name})
-    
-    if existing_set:
-        set_id = existing_set['_id']
-        # Use the language already saved in the existing set if available
-        set_lang = existing_set.get('language', set_lang)
-        flashcards.delete_many({'set_id': set_id})
-    else:
-        # Create a new set
-        set_id = flashcardsets.insert_one({
-            'user_id': user_id,
-            'name': set_name,
-            'language': set_lang, 
-            'created_at': datetime.utcnow()
-        }).inserted_id
+    # --- UPDATED LOGIC: Always create a new unique set ---
+    # We add a timestamp so sets with the same name don't conflict
+    timestamp = datetime.utcnow().strftime("%H:%M")
+    display_name = f"{set_name} ({timestamp})" if set_name else f"New Set ({timestamp})"
+
+    set_id = flashcardsets.insert_one({
+        'user_id': user_id,
+        'name': display_name, # Using the unique name
+        'language': set_lang, 
+        'created_at': datetime.utcnow()
+    }).inserted_id
 
     # 2. Save the individual cards
     for card in temp_cards:
@@ -304,9 +298,8 @@ def save_generated_flashcards():
     session.pop('temp_generated', None)
     session.pop('temp_filename', None)
 
-    # 3. Now set_lang is guaranteed to exist
-    flash(f'Set saved in {set_lang.upper()}!', 'success')
-    return redirect(url_for('quiz_flashcards', set_id=str(set_id)))
+    flash(f'New set "{display_name}" saved!', 'success')
+    return redirect(url_for('view_sets')) # Redirect to library to see the new set
 
 @app.route("/study/<set_id>")
 def study_flashcards(set_id):
@@ -522,6 +515,7 @@ def set_mastery_analytics(set_id):
     for c in cards:
         c['_id'] = str(c['_id'])
         c['status'] = c.get('status', 'red')
+        c['mastery_score'] = c.get('mastery_score', 0)
 
     return render_template(
         "view_mastery.html",
