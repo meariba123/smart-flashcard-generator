@@ -1,4 +1,3 @@
-# app.py
 from bson import ObjectId
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, current_app
@@ -150,9 +149,7 @@ def view_set(set_id):
                            flashcards=cards)
 
 
-
-# ------------------ Upload Notes (AJAX) ------------------
-# ------------------ Upload Notes (AJAX) ------------------
+#Upload Notes (AJAX) 
 @app.route('/upload_notes_ajax', methods=['POST'])
 def upload_notes_ajax():
     try:
@@ -161,7 +158,7 @@ def upload_notes_ajax():
 
         file = request.files['notes_file']
         
-        # --- NEW: Get the language choice from the frontend ---
+        #Get the language choice from the frontend
         target_lang = request.form.get('target_lang', 'en') 
 
         if file.filename == '':
@@ -172,9 +169,9 @@ def upload_notes_ajax():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
-            # --- UPDATED: Pass the language to your NLP function ---
-            # Ensure your generate_flashcards_from_file function in nlp.py 
-            # is updated to accept a 'language' argument!
+            #UPDATED: Pass the language to your NLP function 
+            #Ensure your generate_flashcards_from_file function in nlp.py 
+            #is updated to accept a 'language' argument!
             flashcards_generated = generate_flashcards_from_file(filepath, language=target_lang)
 
             if not flashcards_generated:
@@ -281,7 +278,7 @@ def save_generated_flashcards():
 
     # 2. Save the individual cards
     for card in temp_cards:
-        flashcards.insert_one({
+        flashcards.insert_one({ 
             'user_id': user_id,
             'set_id': set_id,
             'question': card.get('question'),
@@ -298,8 +295,11 @@ def save_generated_flashcards():
     session.pop('temp_generated', None)
     session.pop('temp_filename', None)
 
-    flash(f'New set "{display_name}" saved!', 'success')
-    return redirect(url_for('view_sets')) # Redirect to library to see the new set
+    # 3. Now set_lang is guaranteed to exist
+    flash(f'Set saved successfully! Starting your quiz...', 'success')
+    
+    # Change this line to go straight to the quiz route
+    return redirect(url_for('quiz_flashcards', set_id=str(set_id)))
 
 @app.route("/study/<set_id>")
 def study_flashcards(set_id):
