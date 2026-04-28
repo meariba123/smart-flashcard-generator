@@ -7,10 +7,10 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 
-# Import advanced NLP pipeline (keep your existing nlp.py)
+#Import advanced NLP pipeline (keep your existing nlp.py)
 from nlp import extract_text_from_file, generate_flashcards_from_file, is_answer_correct
 
-# Import blueprint that contains progress routes
+#Import blueprint that contains progress routes
 from user_progress import progress_bp
 
 # Environment + Flask Setup
@@ -21,15 +21,15 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 ALLOWED_EXTENSIONS = {'txt','doc','docx','pdf','ppt','pptx','png','jpg','jpeg'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# MongoDB Setup (same DB name you used)
+#MongoDB Setup
 client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
-db = client['flashcarddb']   # keep same name 'flashcarddb'
+db = client['flashcarddb']   
 users = db['users']
 flashcards = db['flashcards']
 flashcardsets = db['flashcardsets']
 progress = db['progress']
 
-# Expose db for blueprints to use current_app.db
+#Expose db for blueprints to use current_app.db
 app.db = db
 
 bcrypt = Bcrypt(app)
@@ -38,7 +38,7 @@ bcrypt = Bcrypt(app)
 app.register_blueprint(progress_bp)
 
 
-# ------------------ Auth Routes ------------------
+#Auth Routes 
 @app.route('/')
 def welcome():
     return render_template('welcome.html')
@@ -86,7 +86,7 @@ def logout():
     return redirect(url_for('welcome'))
 
 
-# ------------------ Dashboard ------------------
+# Dashboard 
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
@@ -95,7 +95,7 @@ def dashboard():
     return render_template('dashboard.html', sets=sets)
 
 
-# ------------------ Create Flashcard Set ------------------
+#  Create Flashcard Set 
 @app.route('/create-set', methods=['GET', 'POST'])
 def create_set():
     if 'user_id' not in session:
@@ -111,7 +111,7 @@ def create_set():
     return render_template('create_set.html')
 
 
-# ------------------ Create Flashcard Manually ------------------
+#  Create Flashcard Manually 
 @app.route('/create-flashcard', methods=['GET', 'POST'])
 def create_flashcard():
     if 'user_id' not in session:
@@ -132,7 +132,7 @@ def create_flashcard():
     return render_template('create_flashcards.html', flashcard_sets=sets)
 
 
-# ------------------ View Flashcard Set ------------------
+#  View Flashcard Set 
 @app.route('/set/<set_id>')
 def view_set(set_id):
 
@@ -158,7 +158,7 @@ def upload_notes_ajax():
 
         file = request.files['notes_file']
         
-        #Get the language choice from the frontend
+   
         target_lang = request.form.get('target_lang', 'en') 
 
         if file.filename == '':
@@ -169,9 +169,7 @@ def upload_notes_ajax():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
-            #UPDATED: Pass the language to your NLP function 
-            #Ensure your generate_flashcards_from_file function in nlp.py 
-            #is updated to accept a 'language' argument!
+          
             flashcards_generated = generate_flashcards_from_file(filepath, language=target_lang)
 
             if not flashcards_generated:
@@ -228,11 +226,9 @@ def view_sets():
         set_object_id = s['_id']
         s['_id'] = str(set_object_id)
 
-        # ✅ card count
         cards = list(flashcards.find({'set_id': set_object_id}))
         s['count'] = len(cards)
 
-        # ✅ REAL progress calculation (PUT IT HERE)
         prog = list(progress.find({'set_id': set_object_id}))
 
         if prog:
@@ -252,7 +248,7 @@ def preview_generated_flashcards(filename):
     return render_template('preview_generated.html', flashcards=generated)
 
 
-# ------------------ Save Generated Flashcards ------------------
+# Save Generated Flashcards 
 @app.route('/save-generated-flashcards', methods=['POST'])
 def save_generated_flashcards():
     if 'user_id' not in session:
@@ -264,8 +260,6 @@ def save_generated_flashcards():
     
     set_lang = temp_cards[0].get('language', 'en') if temp_cards else 'en'
 
-    # --- UPDATED LOGIC: Always create a new unique set ---
-    # We add a timestamp so sets with the same name don't conflict
     timestamp = datetime.utcnow().strftime("%H:%M")
     display_name = f"{set_name} ({timestamp})" if set_name else f"New Set ({timestamp})"
 
@@ -298,7 +292,6 @@ def save_generated_flashcards():
     # 3. Now set_lang is guaranteed to exist
     flash(f'Set saved successfully! Starting your quiz...', 'success')
     
-    # Change this line to go straight to the quiz route
     return redirect(url_for('quiz_flashcards', set_id=str(set_id)))
 
 @app.route("/study/<set_id>")
@@ -314,18 +307,15 @@ def study_flashcards(set_id):
 
     cards = list(flashcards.find({"set_id": ObjectId(set_id), "user_id": user_id}))
     
-    # --- FIX START ---
     # Convert the set ID
     flashcard_set["_id"] = str(flashcard_set["_id"])
     
     for card in cards:
         card["_id"] = str(card["_id"])
-        # Crucial: Convert the set_id inside the card too!
         if "set_id" in card:
             card["set_id"] = str(card["set_id"])
         if "user_id" in card:
             card["user_id"] = str(card["user_id"])
-    # --- FIX END ---
 
     total_cards = len(cards)
     mastered_count = sum(1 for c in cards if c.get('status') == 'green' or c.get('mastery_score', 0) >= 0.8)
@@ -340,7 +330,7 @@ def study_flashcards(set_id):
         temp_mode=False
     )
 
-# ------------------ Quiz Mode ------------------
+#  Quiz Mode 
 @app.route("/quiz/<set_id>")
 def quiz_flashcards(set_id):
     if "user_id" not in session:
@@ -360,7 +350,7 @@ def quiz_flashcards(set_id):
     mastered = sum(1 for c in cards if c.get('status') == 'green')
     percent = int((mastered / total) * 100) if total > 0 else 0
 
-    # --- THE FIX: Convert ObjectIds to Strings ---
+    #Convert ObjectIds to Strings 
     flashcard_set["_id"] = str(flashcard_set["_id"])
     for card in cards:
         card["_id"] = str(card["_id"])
@@ -378,7 +368,7 @@ def quiz_flashcards(set_id):
         mastery_percent=percent
     )
 
-# Mastery Mode 
+ 
 # Mastery Mode 
 @app.route("/mastery/<set_id>")
 def mastery_mode(set_id):
@@ -419,7 +409,7 @@ def mastery_mode(set_id):
         flashcard_set=flashcard_set
     )
 
-# ------------------ Basic Quiz Answer Check ------------------
+#  Basic Quiz Answer Check 
 @app.route("/check_answer", methods=["POST"])
 def check_answer():
     data = request.get_json()
@@ -432,7 +422,7 @@ def check_answer():
         return jsonify({"correct": False, "correct_answer": correct_answer})
     
 
-# ------------------ Mastery Answer Check ------------------
+#  Mastery Answer Check 
 @app.route("/check_mastery_answer", methods=["POST"])
 def check_mastery_answer():
     data = request.json
@@ -466,7 +456,7 @@ def check_mastery_answer():
     # Mastery Calculation: 40% AI confidence, 60% user accuracy
     mastery = round((0.4 * ai_conf) + (0.6 * accuracy), 2)
 
-    # --- FIX: Logical thresholds without 'attempts >= 3' gatekeeping ---
+
     if mastery >= 0.8:
         status = "green"
     elif mastery >= 0.5:
@@ -537,7 +527,6 @@ def edit_flashcard():
     if not card_id or not new_question or not new_answer:
         return jsonify({"success": False, "error": "Missing data"}), 400
 
-    # Ensure the user only edits their own cards
     result = db.flashcards.update_one(
         {"_id": ObjectId(card_id), "user_id": ObjectId(session["user_id"])},
         {"$set": {"question": new_question, "answer": new_answer}}
@@ -547,12 +536,12 @@ def edit_flashcard():
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Update failed or no changes made"})
 
-# ------------------ File Utility ------------------
+#  File Utility 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# ------------------ Main ------------------
+# Main 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)
 
